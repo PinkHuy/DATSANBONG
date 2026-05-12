@@ -1,0 +1,379 @@
+@{
+    ViewBag.Title = "DatSanBong – Đặt Sân Bóng Nhanh Chóng, Tiện Lợi";
+
+}
+
+
+<!-- ══════════════════════════════════════════════════════
+     HERO SECTION
+══════════════════════════════════════════════════════ -->
+<section class="hero-section" id="hero">
+    <div class="hero-overlay"></div>
+    <div class="container position-relative z-1 h-100 d-flex flex-column justify-content-center">
+        <div class="row align-items-center min-vh-80">
+            <div class="col-lg-7" data-aos="fade-up">
+                <span class="hero-badge mb-3 d-inline-block">
+                    <i class="bi bi-lightning-fill me-1"></i> Nền tảng số 1 Việt Nam
+                </span>
+                <h1 class="hero-title">
+                    Đặt Sân Bóng<br>
+                    <span class="hero-title-accent">Dễ Dàng – Nhanh Chóng<br>Tiện Lợi</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Hàng trăm sân bóng chất lượng cao, đặt sân chỉ trong vài giây.
+                    Giá tốt nhất, xác nhận tức thì, hỗ trợ 24/7.
+                </p>
+                <div class="hero-cta d-flex flex-wrap gap-3 mb-5">
+                    <a href="@Url.Action("Index","SanBong")" class="btn btn-hero-primary btn-lg">
+                        <i class="bi bi-calendar-check me-2"></i>Đặt sân ngay
+                    </a>
+                    <a href="@Url.Action("Index","SanBong")" class="btn btn-hero-outline btn-lg">
+                        <i class="bi bi-grid me-2"></i>Xem danh sách sân
+                    </a>
+                </div>
+
+                <!-- Quick Search Form -->
+                <div class="hero-search-card">
+                    <div class="hero-search-label mb-3">
+                        <i class="bi bi-search me-2 text-success"></i>
+                        <strong>Tìm sân nhanh</strong>
+                    </div>
+                    <form action="@Url.Action("Index","SanBong")" method="get" class="row g-2 align-items-end">
+                        <div class="col-12 col-sm-5">
+                            <label class="form-label small fw-semibold text-muted mb-1">Loại sân</label>
+                            <select class="form-select form-select-sm shadow-none" name="loaiSan" id="heroLoaiSan">
+                                <option value="">-- Tất cả loại sân --</option>
+                                <option value="5">Sân 5 người</option>
+                                <option value="7">Sân 7 người</option>
+                                <option value="11">Sân 11 người</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-4">
+                            <label class="form-label small fw-semibold text-muted mb-1">Ngày đặt</label>
+                            <input type="date" class="form-control form-control-sm shadow-none"
+                                   name="ngayDat" id="heroNgayDat"
+                                   min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                   value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-12 col-sm-3">
+                            <button type="submit" class="btn btn-success btn-sm w-100 fw-semibold">
+                                <i class="bi bi-search me-1"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Stats column -->
+            <div class="col-lg-5 d-none d-lg-flex justify-content-end" data-aos="fade-left">
+                <div class="hero-stats-grid">
+                    <div class="hero-stat-card">
+                        <div class="hero-stat-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                        <div class="hero-stat-num">500+</div>
+                        <div class="hero-stat-lbl">Sân bóng</div>
+                    </div>
+                    <div class="hero-stat-card hero-stat-card--accent">
+                        <div class="hero-stat-icon"><i class="bi bi-people-fill"></i></div>
+                        <div class="hero-stat-num">50K+</div>
+                        <div class="hero-stat-lbl">Người dùng</div>
+                    </div>
+                    <div class="hero-stat-card hero-stat-card--accent">
+                        <div class="hero-stat-icon"><i class="bi bi-calendar2-check-fill"></i></div>
+                        <div class="hero-stat-num">200K+</div>
+                        <div class="hero-stat-lbl">Lượt đặt sân</div>
+                    </div>
+                    <div class="hero-stat-card">
+                        <div class="hero-stat-icon"><i class="bi bi-star-fill"></i></div>
+                        <div class="hero-stat-num">4.9★</div>
+                        <div class="hero-stat-lbl">Đánh giá</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scrolldown indicator -->
+    <div class="hero-scroll-indicator">
+        <i class="bi bi-chevron-double-down"></i>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     DANH MỤC LOẠI SÂN
+══════════════════════════════════════════════════════ -->
+<section class="section-category py-5" id="loai-san">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-pill">Danh mục sân</span>
+            <h2 class="section-title mt-2">Chọn Loại Sân Phù Hợp</h2>
+            <p class="section-sub">Đa dạng loại sân, đáp ứng mọi nhu cầu thi đấu của bạn</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <!-- Sân 5 -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <a href="@Url.Action("Index","SanBong")?loaiSan=5" class="category-card text-decoration-none">
+                    <div class="category-card-icon category-card-icon--green">
+                        <i class="bi bi-pentagon-fill"></i>
+                    </div>
+                    <div class="category-card-badge">Phổ biến</div>
+                    <h3 class="category-card-title">Sân 5 Người</h3>
+                    <p class="category-card-desc">
+                        Sân mini lý tưởng cho nhóm bạn bè nhỏ. Không gian linh hoạt,
+                        giá cả phải chăng, dễ tổ chức.
+                    </p>
+                    <div class="category-card-link">
+                        Xem sân <i class="bi bi-arrow-right ms-1"></i>
+                    </div>
+                </a>
+            </div>
+            <!-- Sân 7 -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <a href="@Url.Action("Index","SanBong")?loaiSan=7" class="category-card category-card--featured text-decoration-none">
+                    <div class="category-card-icon category-card-icon--white">
+                        <i class="bi bi-heptagon-fill"></i>
+                    </div>
+                    <div class="category-card-badge category-card-badge--white">Hot nhất</div>
+                    <h3 class="category-card-title">Sân 7 Người</h3>
+                    <p class="category-card-desc">
+                        Cân bằng hoàn hảo giữa không gian và chi phí. Lựa chọn hàng đầu
+                        cho các trận đấu hàng tuần.
+                    </p>
+                    <div class="category-card-link">
+                        Xem sân <i class="bi bi-arrow-right ms-1"></i>
+                    </div>
+                </a>
+            </div>
+            <!-- Sân 11 -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <a href="@Url.Action("Index","SanBong")?loaiSan=11" class="category-card text-decoration-none">
+                    <div class="category-card-icon category-card-icon--green">
+                        <i class="bi bi-circle-fill"></i>
+                    </div>
+                    <div class="category-card-badge">Chuyên nghiệp</div>
+                    <h3 class="category-card-title">Sân 11 Người</h3>
+                    <p class="category-card-desc">
+                        Sân tiêu chuẩn cho các giải đấu chính thức. Mặt cỏ chất lượng cao,
+                        đầy đủ tiện nghi.
+                    </p>
+                    <div class="category-card-link">
+                        Xem sân <i class="bi bi-arrow-right ms-1"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SÂN NỔI BẬT
+══════════════════════════════════════════════════════ -->
+<section class="section-featured py-5 bg-light-green" id="san-noi-bat">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-pill">Được yêu thích</span>
+            <h2 class="section-title mt-2">Sân Bóng Nổi Bật</h2>
+            <p class="section-sub">Những sân bóng được đặt nhiều nhất, đánh giá cao nhất từ cộng đồng</p>
+        </div>
+        <div class="row g-4">
+            <!-- Card 1 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="field-card">
+                    <div class="field-card-img field-card-img--1">
+                        <div class="field-card-badges">
+                            <span class="field-badge field-badge--hot">🔥 Hot</span>
+                        </div>
+                        <div class="field-card-price-overlay">
+                            <span>từ <strong>150K</strong>/giờ</span>
+                        </div>
+                    </div>
+                    <div class="field-card-body">
+                        <div class="field-card-type mb-1">
+                            <i class="bi bi-pentagon-fill me-1 text-success"></i>Sân 5 người
+                        </div>
+                        <h3 class="field-card-title">Sân Bóng Phú Mỹ Hưng</h3>
+                        <div class="field-card-meta">
+                            <span><i class="bi bi-geo-alt me-1"></i>Quận 7, TP.HCM</span>
+                            <span><i class="bi bi-star-fill text-warning me-1"></i>4.9 (128 đánh giá)</span>
+                        </div>
+                        <div class="field-card-features">
+                            <span class="field-tag"><i class="bi bi-lightbulb"></i> Đèn cao áp</span>
+                            <span class="field-tag"><i class="bi bi-droplet"></i> Tưới cỏ</span>
+                            <span class="field-tag"><i class="bi bi-car-front"></i> Bãi xe</span>
+                        </div>
+                        <a href="@Url.Action("Index","SanBong")" class="btn btn-book w-100 mt-3">
+                            <i class="bi bi-calendar-check me-2"></i>Đặt ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- Card 2 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="field-card field-card--featured">
+                    <div class="field-card-img field-card-img--2">
+                        <div class="field-card-badges">
+                            <span class="field-badge field-badge--new">✨ Mới</span>
+                            <span class="field-badge field-badge--discount">-20%</span>
+                        </div>
+                        <div class="field-card-price-overlay">
+                            <span>từ <strong>200K</strong>/giờ</span>
+                        </div>
+                    </div>
+                    <div class="field-card-body">
+                        <div class="field-card-type mb-1">
+                            <i class="bi bi-heptagon-fill me-1 text-success"></i>Sân 7 người
+                        </div>
+                        <h3 class="field-card-title">Sân Bóng Thủ Đức Arena</h3>
+                        <div class="field-card-meta">
+                            <span><i class="bi bi-geo-alt me-1"></i>Thủ Đức, TP.HCM</span>
+                            <span><i class="bi bi-star-fill text-warning me-1"></i>4.8 (95 đánh giá)</span>
+                        </div>
+                        <div class="field-card-features">
+                            <span class="field-tag"><i class="bi bi-lightbulb"></i> Đèn LED</span>
+                            <span class="field-tag"><i class="bi bi-camera-video"></i> Camera</span>
+                            <span class="field-tag"><i class="bi bi-cup-hot"></i> Canteen</span>
+                        </div>
+                        <a href="@Url.Action("Index","SanBong")" class="btn btn-book w-100 mt-3">
+                            <i class="bi bi-calendar-check me-2"></i>Đặt ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- Card 3 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="field-card">
+                    <div class="field-card-img field-card-img--3">
+                        <div class="field-card-badges">
+                            <span class="field-badge field-badge--hot">🔥 Hot</span>
+                        </div>
+                        <div class="field-card-price-overlay">
+                            <span>từ <strong>350K</strong>/giờ</span>
+                        </div>
+                    </div>
+                    <div class="field-card-body">
+                        <div class="field-card-type mb-1">
+                            <i class="bi bi-circle-fill me-1 text-success"></i>Sân 11 người
+                        </div>
+                        <h3 class="field-card-title">Sân Bóng Bình Thạnh FC</h3>
+                        <div class="field-card-meta">
+                            <span><i class="bi bi-geo-alt me-1"></i>Bình Thạnh, TP.HCM</span>
+                            <span><i class="bi bi-star-fill text-warning me-1"></i>4.7 (72 đánh giá)</span>
+                        </div>
+                        <div class="field-card-features">
+                            <span class="field-tag"><i class="bi bi-lightbulb"></i> Đèn đêm</span>
+                            <span class="field-tag"><i class="bi bi-droplet"></i> Cỏ nhân tạo</span>
+                            <span class="field-tag"><i class="bi bi-car-front"></i> Bãi xe rộng</span>
+                        </div>
+                        <a href="@Url.Action("Index","SanBong")" class="btn btn-book w-100 mt-3">
+                            <i class="bi bi-calendar-check me-2"></i>Đặt ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-5">
+            <a href="@Url.Action("Index","SanBong")" class="btn btn-outline-success btn-lg px-5 fw-semibold">
+                <i class="bi bi-grid me-2"></i>Xem tất cả sân bóng
+            </a>
+        </div>
+    </div>
+</section>
+@Html.Partial("_SanBongNoiBat")
+<!-- ══════════════════════════════════════════════════════
+     TẠI SAO CHỌN CHÚNG TÔI
+══════════════════════════════════════════════════════ -->
+<section class="section-why py-5" id="tai-sao">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-pill">Lý do chọn chúng tôi</span>
+            <h2 class="section-title mt-2">Tại Sao Chọn DatSanBong?</h2>
+            <p class="section-sub">Chúng tôi cam kết mang lại trải nghiệm đặt sân tốt nhất cho bạn</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="why-card">
+                    <div class="why-card-icon why-card-icon--1">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <h3 class="why-card-title">Đặt Sân 24/7</h3>
+                    <p class="why-card-desc">
+                        Đặt sân bất kỳ lúc nào, kể cả nửa đêm. Hệ thống hoạt động liên tục
+                        365 ngày trong năm, không gián đoạn.
+                    </p>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="why-card why-card--featured">
+                    <div class="why-card-icon why-card-icon--white">
+                        <i class="bi bi-tags-fill"></i>
+                    </div>
+                    <h3 class="why-card-title">Giá Tốt Nhất</h3>
+                    <p class="why-card-desc">
+                        Cam kết giá tốt nhất thị trường. Nhiều ưu đãi hấp dẫn,
+                        voucher giảm giá dành riêng cho thành viên.
+                    </p>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="why-card">
+                    <div class="why-card-icon why-card-icon--2">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </div>
+                    <h3 class="why-card-title">Xác Nhận Nhanh</h3>
+                    <p class="why-card-desc">
+                        Xác nhận đặt sân tức thì sau khi thanh toán.
+                        Nhận thông báo qua email và SMS ngay lập tức.
+                    </p>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="why-card">
+                    <div class="why-card-icon why-card-icon--3">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h3 class="why-card-title">Hỗ Trợ Tận Tình</h3>
+                    <p class="why-card-desc">
+                        Đội ngũ hỗ trợ chuyên nghiệp, sẵn sàng giải đáp
+                        mọi thắc mắc và xử lý sự cố nhanh chóng.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     CTA BANNER
+══════════════════════════════════════════════════════ -->
+<section class="section-cta py-5" id="cta">
+    <div class="container">
+        <div class="cta-banner">
+            <div class="cta-banner-bg"></div>
+            <div class="row align-items-center position-relative z-1">
+                <div class="col-lg-7 mb-4 mb-lg-0">
+                    <h2 class="cta-title">Sẵn sàng cho trận đấu tiếp theo?</h2>
+                    <p class="cta-subtitle">
+                        Đăng ký miễn phí ngay hôm nay và nhận ngay voucher giảm <strong>50K</strong>
+                        cho lần đặt sân đầu tiên!
+                    </p>
+                </div>
+                <div class="col-lg-5 d-flex flex-wrap gap-3 justify-content-lg-end">
+                    @if (Session["MaND"] == null)
+                    {
+                        <a href="@Url.Action("DangKy","Account")" class="btn btn-cta-primary btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Đăng ký miễn phí
+                        </a>
+                        <a href="@Url.Action("DangNhap","Account")" class="btn btn-cta-outline btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Index","SanBong")" class="btn btn-cta-primary btn-lg">
+                            <i class="bi bi-calendar-check me-2"></i>Đặt sân ngay
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

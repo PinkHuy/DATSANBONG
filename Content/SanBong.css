@@ -1,0 +1,240 @@
+/* ============================================================
+   CSS: Sân Bóng Nổi Bật
+   Thêm vào: Content/Site.css (hoặc tạo file Content/SanBong.css)
+   Tất cả class đều có prefix "dsb-" để tránh xung đột với Bootstrap
+   ============================================================ */
+
+/* --- SECTION WRAPPER --- */
+.dsb-section {
+    background: #0d1117;
+    padding-bottom: 60px;
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+}
+
+/* --- HERO --- */
+.dsb-hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+    position: relative;
+    background: radial-gradient(ellipse at 50% 0%, rgba(29,185,84,0.15) 0%, transparent 65%);
+}
+
+.dsb-badge {
+    display: inline-block;
+    background: rgba(29, 185, 84, 0.12);
+    border: 1px solid rgba(29, 185, 84, 0.4);
+    color: #1db954;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    border-radius: 50px;
+    margin-bottom: 18px;
+}
+
+.dsb-title {
+    font-size: clamp(32px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #ffffff 30%, #1db954 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+}
+
+.dsb-subtitle {
+    color: #8b949e;
+    font-size: 15px;
+    max-width: 440px;
+    margin: 0 auto 24px;
+    line-height: 1.6;
+}
+
+.dsb-location {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(247, 201, 72, 0.1);
+    border: 1px solid rgba(247, 201, 72, 0.3);
+    color: #f7c948;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 18px;
+    border-radius: 50px;
+    letter-spacing: 1px;
+}
+
+/* --- DIVIDER --- */
+.dsb-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto 36px;
+    padding: 0 24px;
+}
+
+.dsb-divider span {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #1db954;
+    white-space: nowrap;
+}
+
+.dsb-divider::before,
+.dsb-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(29, 185, 84, 0.4));
+}
+
+.dsb-divider::after {
+    background: linear-gradient(to left, transparent, rgba(29, 185, 84, 0.4));
+}
+
+/* --- GRID --- */
+.dsb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 22px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* --- CARD --- */
+.dsb-card {
+    background: #161b22;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+
+    /* Animation xuất hiện */
+    animation: dsbFadeUp 0.5s ease both;
+}
+
+.dsb-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(29, 185, 84, 0.5);
+    box-shadow: 0 18px 48px rgba(29, 185, 84, 0.14);
+}
+
+/* Stagger animation cho từng card */
+.dsb-card:nth-child(1) { animation-delay: 0.05s; }
+.dsb-card:nth-child(2) { animation-delay: 0.10s; }
+.dsb-card:nth-child(3) { animation-delay: 0.15s; }
+.dsb-card:nth-child(4) { animation-delay: 0.20s; }
+.dsb-card:nth-child(5) { animation-delay: 0.25s; }
+.dsb-card:nth-child(6) { animation-delay: 0.30s; }
+.dsb-card:nth-child(7) { animation-delay: 0.35s; }
+
+@keyframes dsbFadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- ẢNH --- */
+.dsb-img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #1c2128;
+}
+
+.dsb-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    display: block;
+}
+
+.dsb-card:hover .dsb-img-wrap img {
+    transform: scale(1.07);
+}
+
+/* --- OVERLAY khi hover --- */
+.dsb-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);
+    display: flex;
+    align-items: flex-end;
+    padding: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dsb-card:hover .dsb-overlay {
+    opacity: 1;
+}
+
+.dsb-btn {
+    background: #1db954;
+    color: #000;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 50px;
+    letter-spacing: 0.4px;
+}
+
+/* --- NỘI DUNG CARD --- */
+.dsb-body {
+    padding: 16px 18px 18px;
+}
+
+.dsb-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 7px;
+    line-height: 1.25;
+    letter-spacing: 0.3px;
+}
+
+.dsb-addr {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    color: #8b949e;
+    font-size: 12.5px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.dsb-addr svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #1db954;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .dsb-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+        padding: 0 16px;
+    }
+    .dsb-hero {
+        padding: 40px 16px 30px;
+    }
+    .dsb-title {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dsb-grid {
+        grid-template-columns: 1fr;
+    }
+}

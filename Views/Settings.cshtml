@@ -1,0 +1,129 @@
+﻿@{
+    ViewBag.Title = "Cài đặt – DatSanBong";
+}
+
+<div class="settings-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+
+                <!-- Header -->
+                <div class="mb-4">
+                    <h1 class="fw-800 fs-3 text-dark mb-1">
+                        <i class="bi bi-gear-fill text-success me-2"></i>Cài đặt
+                    </h1>
+                    <p class="text-muted">Tùy chỉnh giao diện theo sở thích của bạn</p>
+                </div>
+
+                <!-- Card: Phông chữ -->
+                <div class="settings-card">
+                    <div class="settings-card-title">
+                        <i class="bi bi-fonts text-success"></i>
+                        Phông chữ hiển thị
+                    </div>
+
+                    <!-- Option 1: Segoe UI (mặc định) -->
+                    <div class="font-option" id="opt-segoe" onclick="chonFont('segoe')">
+                        <div class="font-option-radio"></div>
+                        <div class="font-option-info">
+                            <div class="font-option-name">Segoe UI <span class="badge bg-success ms-1" style="font-size:.65rem">Mặc định</span></div>
+                            <div class="font-option-preview">Xin chào! Đây là phông chữ mặc định – rõ ràng, dễ đọc.</div>
+                        </div>
+                    </div>
+
+                    <!-- Option 2: Courier New -->
+                    <div class="font-option" id="opt-courier" onclick="chonFont('courier')">
+                        <div class="font-option-radio"></div>
+                        <div class="font-option-info">
+                            <div class="font-option-name">Courier New</div>
+                            <div class="font-option-preview preview-courier">Xin chào! Đây là phông chữ Courier New – phong cách cổ điển.</div>
+                        </div>
+                    </div>
+
+                    <!-- Nút lưu -->
+                    <div class="mt-3 d-flex align-items-center gap-3">
+                        <button class="btn-save-settings" onclick="luuCaiDat()">
+                            <i class="bi bi-check-lg me-2"></i>Lưu cài đặt
+                        </button>
+                        <span id="save-msg" style="color:#16a34a; font-weight:600; display:none">
+                            <i class="bi bi-check-circle-fill me-1"></i>Đã lưu!
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="settings-card">
+                    <div class="settings-card-title">
+                        <i class="bi bi-eye text-success"></i>
+                        Xem trước
+                    </div>
+                    <div id="preview-box" style="padding:1rem; background:#f8fafc; border-radius:.5rem; border:1px solid #e2e8f0">
+                        <h5 class="fw-bold mb-2">DatSanBong – Đặt Sân Bóng</h5>
+                        <p class="mb-1" style="font-size:.9rem; color:#64748b">
+                            Hàng trăm sân bóng chất lượng cao, đặt sân chỉ trong vài giây.
+                        </p>
+                        <span style="color:#16a34a; font-weight:600; font-size:.85rem">Trang chủ · Danh sách sân · Đặt sân ngay</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>// Lấy font đang lưu từ localStorage
+    var fontHienTai = localStorage.getItem('dsb-font') || 'segoe';
+
+    // Hiển thị lựa chọn đang active khi load trang
+    window.addEventListener('DOMContentLoaded', function () {
+        capNhatUI(fontHienTai);
+    });
+
+    function chonFont(font) {
+        fontHienTai = font;
+        capNhatUI(font);
+
+        // Áp dụng preview ngay lập tức
+        var preview = document.getElementById('preview-box');
+        if (font === 'courier') {
+            preview.style.fontFamily = "'Courier New', Courier, monospace";
+        } else {
+            preview.style.fontFamily = "'Segoe UI', Tahoma, Arial, sans-serif";
+        }
+    }
+
+    function capNhatUI(font) {
+        // Bỏ active tất cả
+        document.getElementById('opt-segoe').classList.remove('active');
+        document.getElementById('opt-courier').classList.remove('active');
+
+        // Active cái được chọn
+        if (font === 'courier') {
+            document.getElementById('opt-courier').classList.add('active');
+        } else {
+            document.getElementById('opt-segoe').classList.add('active');
+        }
+    }
+
+    function luuCaiDat() {
+        // Lưu vào localStorage
+        localStorage.setItem('dsb-font', fontHienTai);
+
+        // Áp dụng ngay lên toàn trang
+        apDungFont(fontHienTai);
+
+        // Hiện thông báo đã lưu
+        var msg = document.getElementById('save-msg');
+        msg.style.display = 'inline';
+        setTimeout(function () { msg.style.display = 'none'; }, 2500);
+    }
+
+    function apDungFont(font) {
+        if (font === 'courier') {
+            document.body.classList.add('font-courier');
+        } else {
+            document.body.classList.remove('font-courier');
+        }
+    }</script>
+}
