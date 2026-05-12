@@ -206,7 +206,7 @@
     <Content Include="Views\Account\DangNhap.cshtml" />
     <Content Include="Views\Account\DangKy.cshtml" />
     <Content Include="Views\Settings.cshtml" />
-    <Content Include="Views\Home\_SanBongNoiBat.cshtml" />
+    <Content Include="Views\admin\create.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
