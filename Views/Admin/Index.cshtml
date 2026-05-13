@@ -1,0 +1,66 @@
+@model IEnumerable<DATSANBONG.Models.SanBong>
+
+@{
+    ViewBag.Title = "Quản lý sân bóng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Quản lý sân bóng</h2>
+    
+    <p>
+        <a href="@Url.Action("Create")" class="btn btn-success">
+            <i class="fas fa-plus"></i> Thêm sân bóng mới
+        </a>
+    </p>
+    
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Tên Sân</th>
+                    <th>Loại Sân</th>
+                    <th>Giá Thuê (Giờ)</th>
+                    <th>Hình Ảnh</th>
+                    <th>Trạng Thái</th>
+                    <th class="text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model) {
+                        <tr>
+                            <td class="fw-bold">@item.TenSan</td>
+                            <td>@(item.LoaiSan != null ? item.LoaiSan.TenLoai : "N/A")</td>
+                            <td class="text-danger fw-bold">@String.Format("{0:N0} VNĐ", item.GiaTheoGio)</td>
+                            <td>
+                                @if(!string.IsNullOrEmpty(item.HinhAnh))
+                                {
+                                    <img src="~/Content/Images/@item.HinhAnh" alt="@item.TenSan" class="img-thumbnail" style="width: 120px; height: auto;" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có ảnh</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">@item.TrangThai</span>
+                            </td>
+                            <td class="text-center">
+                                <a href="@Url.Action("Edit", new { id = item.MaSan })" class="btn btn-primary btn-sm m-1">Sửa</a>
+                                <a href="@Url.Action("Delete", new { id = item.MaSan })" class="btn btn-danger btn-sm m-1" onclick="return confirm('Bạn có chắc chắn muốn xóa sân bóng này? Dữ liệu không thể phục hồi!');">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4">Chưa có dữ liệu sân bóng</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
