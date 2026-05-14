@@ -207,12 +207,10 @@
     <Content Include="Views\Account\DangNhap.cshtml" />
     <Content Include="Views\Account\DangKy.cshtml" />
     <Content Include="Views\Settings.cshtml" />
-    <Content Include="Views\Admin\Create.cshtml" />
-    <Content Include="Views\Admin\Edit.cshtml" />
-    <Content Include="Views\Admin\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\admin\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />
