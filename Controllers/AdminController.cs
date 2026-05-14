@@ -12,6 +12,54 @@ namespace DATSANBONG.Controllers
     {
         DataClasses1DataContext db = new DataClasses1DataContext("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=QuanLySanBong_MVC;Integrated Security=True;MultipleActiveResultSets=True");
 
+        // ============================================================
+        // GET: Admin/Dashboard
+        // Trang tổng quan dành cho Admin — hiển thị thống kê nhanh
+        // ============================================================
+        public ActionResult Dashboard()
+        {
+            // ── 1. Tổng số sân bóng ──
+            // Count() đếm tất cả record trong bảng SanBong
+            ViewBag.TongSan = db.SanBongs.Count();
+
+            // ── 2. Tổng số khách hàng (người dùng) ──
+            // Count() đếm tất cả record trong bảng NguoiDung
+            ViewBag.TongKhach = db.NguoiDungs.Count();
+
+            // ── 3. Tổng số đơn đặt sân ──
+            // Count() đếm tất cả record trong bảng DatSan
+            ViewBag.TongDon = db.DatSans.Count();
+
+            // ── 4. Tổng doanh thu ──
+            // Sum() tính tổng cột TongTien
+            // Dùng try-catch vì: nếu bảng DatSan rỗng hoặc TongTien toàn null
+            //   → Sum() sẽ trả về null → cần xử lý để tránh crash
+            try
+            {
+                // Sum(d => d.TongTien) trả về decimal? (nullable)
+                // Toán tử ?? (null-coalescing): nếu kết quả null thì gán = 0
+                ViewBag.DoanhThu = db.DatSans.Sum(d => d.TongTien) ?? 0;
+            }
+            catch
+            {
+                // Phòng trường hợp lỗi bất ngờ (ví dụ: mất kết nối DB)
+                ViewBag.DoanhThu = 0;
+            }
+
+            // ── 5. Lấy 5 đơn đặt sân mới nhất ──
+            // OrderByDescending: sắp xếp GIẢM DẦN theo NgayDat (mới nhất lên đầu)
+            // Take(5): chỉ lấy 5 bản ghi đầu tiên
+            // ToList(): chuyển kết quả thành List để View dùng foreach
+            var donMoiNhat = db.DatSans
+                .OrderByDescending(d => d.NgayDat) // Sắp xếp: ngày mới nhất trước
+                .Take(5)                           // Chỉ lấy 5 dòng
+                .ToList();                         // Chuyển sang List<DatSan>
+
+            ViewBag.DonMoiNhat = donMoiNhat;
+
+            return View();
+        }
+
         // GET: Admin
         // Hiển thị danh sách sân bóng
         public ActionResult Index()

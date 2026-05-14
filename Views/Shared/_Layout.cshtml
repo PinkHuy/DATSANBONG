@@ -260,7 +260,7 @@
                     @if (Session["VaiTro"] != null && Session["VaiTro"].ToString() == "Admin")
                     {
                         <li class="nav-item">
-                            <a class="nav-link" href="@Url.Action("Index", "Admin")">
+                            <a class="nav-link" href="@Url.Action("Dashboard", "Admin")">
                                 <i class="bi bi-speedometer2"></i>Dashboard
                             </a>
                         </li>
@@ -291,7 +291,7 @@
                                 @if (Session["VaiTro"].ToString() == "Admin")
                                 {
                                     <li>
-                                        <a class="dropdown-item" href="@Url.Action("Index", "Admin")">
+                                        <a class="dropdown-item" href="@Url.Action("Dashboard", "Admin")">
                                             <i class="bi bi-speedometer2 me-2 text-success"></i>Dashboard
                                         </a>
                                     </li>
