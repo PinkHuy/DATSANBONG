@@ -28,7 +28,7 @@
                     {
                         @Html.AntiForgeryToken()
 
-                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState[""] != null)
+                        if (!ViewData.ModelState.IsValid && ViewData.ModelState.ContainsKey("") && ViewData.ModelState[""].Errors.Count > 0)
                         {
                             <div class="alert alert-danger">
                                 <i class="bi bi-exclamation-circle me-2"></i>

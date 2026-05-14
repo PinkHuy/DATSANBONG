@@ -10,7 +10,7 @@ namespace DATSANBONG.Controllers
 {
     public class AdminController : Controller
     {
-        DataClasses1DataContext db = new DataClasses1DataContext();
+        DataClasses1DataContext db = new DataClasses1DataContext("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=QuanLySanBong_MVC;Integrated Security=True;MultipleActiveResultSets=True");
 
         // GET: Admin
         // Hiển thị danh sách sân bóng
