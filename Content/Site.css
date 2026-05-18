@@ -442,6 +442,7 @@ main {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    display: inline-block;
 }
 
 .hero-subtitle {
@@ -742,15 +743,15 @@ main {
 }
 
 .field-card-img--1 {
-    background: linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.5) 100%), url('https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=600&auto=format&fit=crop') center/cover;
+    background: linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.5) 100%), url('/Content/Images/San_Bong_Telo_1.jpg') center/cover;
 }
 
 .field-card-img--2 {
-    background: linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.5) 100%), url('https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=600&auto=format&fit=crop') center/cover;
+    background: linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.5) 100%), url('/Content/Images/San_Bong_Hoa_An.jpg') center/cover;
 }
 
 .field-card-img--3 {
-    background: linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.5) 100%), url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&auto=format&fit=crop') center/cover;
+    background: linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.5) 100%), url('/Content/Images/San_Bong_Nam_Can_Tho.jpg') center/cover;
 }
 
 .field-card-badges {
