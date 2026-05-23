@@ -1,326 +1,221 @@
 @{
     ViewBag.Title = "Dashboard - Tổng quan";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-@* ═══════════════════════════════════════════════════════════════
-   CSS riêng cho trang Dashboard
-   Đặt trong <style> thay vì file CSS riêng để tiện quản lý
-   ═══════════════════════════════════════════════════════════════ *@
-<style>
-    /* ── Phần tiêu đề trang ── */
-    .dashboard-header {
-        margin-bottom: 2rem;
-    }
-
-    .dashboard-header h2 {
-        font-weight: 700;
-        color: var(--green-dark);
-    }
-
-    .dashboard-header p {
-        color: var(--gray-text);
-        margin-bottom: 0;
-    }
-
-    /* ── Card thống kê ── */
-    .stat-card {
-        border: none;
-        border-radius: var(--radius);
-        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-        transition: transform var(--transition), box-shadow var(--transition);
-        overflow: hidden;
-    }
-
-    /* Hiệu ứng hover: card nhấc lên nhẹ */
-    .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    }
-
-    .stat-card .card-body {
-        padding: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    /* Vòng tròn chứa icon */
-    .stat-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        flex-shrink: 0;
-    }
-
-    /* Mỗi card có màu icon riêng */
-    .stat-icon.bg-green  { background: rgba(46,204,113,0.15); color: #1a6b44; }
-    .stat-icon.bg-blue   { background: rgba(52,152,219,0.15); color: #2980b9; }
-    .stat-icon.bg-orange { background: rgba(243,156,18,0.15); color: #d68910; }
-    .stat-icon.bg-red    { background: rgba(231,76,60,0.15);  color: #c0392b; }
-
-    /* Con số lớn trong card */
-    .stat-number {
-        font-size: 1.75rem;
-        font-weight: 800;
-        line-height: 1.2;
-        color: #1e2d26;
-    }
-
-    .stat-label {
-        font-size: 0.85rem;
-        color: var(--gray-text);
-        font-weight: 500;
-    }
-
-    /* ── Bảng đơn đặt sân mới nhất ── */
-    .recent-card {
-        border: none;
-        border-radius: var(--radius);
-        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    }
-
-    .recent-card .card-header {
-        background: var(--green-dark);
-        color: var(--white);
-        border-radius: var(--radius) var(--radius) 0 0 !important;
-        font-weight: 600;
-        padding: 1rem 1.25rem;
-    }
-
-    .table-dashboard {
-        margin-bottom: 0;
-    }
-
-    .table-dashboard thead th {
-        background: var(--gray-soft);
-        color: var(--gray-text);
-        font-weight: 600;
-        font-size: 0.82rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 2px solid #e0e7e3;
-    }
-
-    .table-dashboard tbody td {
-        vertical-align: middle;
-        padding: 0.85rem 1rem;
-    }
-
-    /* Badge trạng thái đơn */
-    .badge-status {
-        padding: 0.35em 0.75em;
-        border-radius: 50px;
-        font-size: 0.78rem;
-        font-weight: 600;
-    }
-</style>
-
-<div class="container mt-4 mb-5">
-
-    @* ── HEADER ────────────────────────────────────────────── *@
-    <div class="dashboard-header">
-        <h2>
-            <i class="bi bi-speedometer2 me-2"></i>Dashboard
-        </h2>
-        <p>Xin chào, <strong>@Session["HoTen"]</strong>! Dưới đây là tổng quan hệ thống hôm nay.</p>
+<!-- Page Header in Admindek Style -->
+<div class="page-header-blue d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="mb-0 fw-bold">Tổng quan Dashboard</h4>
+        <p class="text-muted mb-0 small">Chào mừng trở lại, <strong>@Session["HoTen"]</strong>! Đây là báo cáo nhanh về hệ thống đặt sân bóng hôm nay.</p>
     </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+        </ol>
+    </nav>
+</div>
 
-    @* ════════════════════════════════════════════════════════
-       HÀNG 1: 4 CARD THỐNG KÊ
-       Dùng Bootstrap Grid: mỗi card chiếm col-md-6 col-xl-3
-       → Desktop: 4 card / hàng
-       → Tablet:  2 card / hàng
-       → Mobile:  1 card / hàng
-       ════════════════════════════════════════════════════════ *@
-    <div class="row g-4 mb-4">
-
-        @* ── Card 1: Tổng Sân Bóng ── *@
-        <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="stat-icon bg-green">
-                        <i class="bi bi-dribbble"></i>
-                    </div>
-                    <div>
-                        @* ViewBag.TongSan: số lượng sân từ Controller *@
-                        <div class="stat-number">@ViewBag.TongSan</div>
-                        <div class="stat-label">Sân Bóng</div>
-                    </div>
+<!-- Stats Cards Row -->
+<div class="row g-4 mb-4">
+    <!-- Card: Tổng Sân Bóng -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 bg-info text-white">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-1">@ViewBag.TongSan</h2>
+                    <p class="mb-0 text-white-50 small fw-semibold text-uppercase">Sân Bóng</p>
+                </div>
+                <div class="fs-1 text-white-50">
+                    <i class="bi bi-dribbble"></i>
                 </div>
             </div>
-        </div>
-
-        @* ── Card 2: Tổng Khách Hàng ── *@
-        <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="stat-icon bg-blue">
-                        <i class="bi bi-people"></i>
-                    </div>
-                    <div>
-                        <div class="stat-number">@ViewBag.TongKhach</div>
-                        <div class="stat-label">Khách Hàng</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @* ── Card 3: Tổng Đơn Đặt ── *@
-        <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="stat-icon bg-orange">
-                        <i class="bi bi-calendar-check"></i>
-                    </div>
-                    <div>
-                        <div class="stat-number">@ViewBag.TongDon</div>
-                        <div class="stat-label">Đơn Đặt Sân</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @* ── Card 4: Tổng Doanh Thu ── *@
-        <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="stat-icon bg-red">
-                        <i class="bi bi-cash-stack"></i>
-                    </div>
-                    <div>
-                        @* Format số tiền: {0:N0} sẽ thêm dấu phân cách hàng nghìn *@
-                        @* Ví dụ: 1500000 → "1,500,000" *@
-                        <div class="stat-number">@String.Format("{0:N0}", ViewBag.DoanhThu) <small style="font-size:.55em;font-weight:500;">VNĐ</small></div>
-                        <div class="stat-label">Doanh Thu</div>
-                    </div>
-                </div>
-            </div>
+            <a href="@Url.Action("Index", "Admin")" class="card-footer bg-dark bg-opacity-10 border-0 py-2.5 text-center text-white text-decoration-none small">
+                Chi tiết sân bóng <i class="bi bi-arrow-right-circle ms-1"></i>
+            </a>
         </div>
     </div>
 
-    @* ════════════════════════════════════════════════════════
-       HÀNG 2: BẢNG 5 ĐƠN ĐẶT SÂN MỚI NHẤT
-       Lấy dữ liệu từ ViewBag.DonMoiNhat (List<DatSan>)
-       ════════════════════════════════════════════════════════ *@
-    <div class="row">
-        <div class="col-12">
-            <div class="card recent-card">
-                <div class="card-header d-flex align-items-center justify-content-between">
-                    <span><i class="bi bi-clock-history me-2"></i>5 Đơn Đặt Sân Mới Nhất</span>
-                    <a href="@Url.Action("Index", "Admin")" class="btn btn-sm btn-outline-light">
-                        Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+    <!-- Card: Tổng Khách Hàng -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 bg-success text-white">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-1">@ViewBag.TongKhach</h2>
+                    <p class="mb-0 text-white-50 small fw-semibold text-uppercase">Khách Hàng</p>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-dashboard table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Khách hàng</th>
-                                    <th>Sân</th>
-                                    <th>Ngày đặt</th>
-                                    <th>Giờ</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @* Kiểm tra ViewBag.DonMoiNhat có dữ liệu không *@
-                                @if (ViewBag.DonMoiNhat != null && ((IEnumerable<DATSANBONG.Models.DatSan>)ViewBag.DonMoiNhat).Any())
+                <div class="fs-1 text-white-50">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+            <a href="@Url.Action("QuanLyKhachHang", "Admin")" class="card-footer bg-dark bg-opacity-10 border-0 py-2.5 text-center text-white text-decoration-none small">
+                Chi tiết khách hàng <i class="bi bi-arrow-right-circle ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Card: Tổng Đơn Đặt -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 bg-warning text-dark">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-1">@ViewBag.TongDon</h2>
+                    <p class="mb-0 text-dark-50 small fw-semibold text-uppercase">Đơn Đặt Sân</p>
+                </div>
+                <div class="fs-1 text-dark-50">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+            </div>
+            <a href="@Url.Action("QuanLyDatSan", "Admin")" class="card-footer bg-dark bg-opacity-10 border-0 py-2.5 text-center text-dark text-decoration-none small">
+                Duyệt đơn đặt sân <i class="bi bi-arrow-right-circle ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Card: Tổng Doanh Thu -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 bg-danger text-white">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-1">@String.Format("{0:N0}", ViewBag.DoanhThu) <span style="font-size: 0.6em;">đ</span></h2>
+                    <p class="mb-0 text-white-50 small fw-semibold text-uppercase">Doanh Thu</p>
+                </div>
+                <div class="fs-1 text-white-50">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+            </div>
+            <a href="@Url.Action("ThongKe", "Admin")" class="card-footer bg-dark bg-opacity-10 border-0 py-2.5 text-center text-white text-decoration-none small">
+                Xem biểu đồ thống kê <i class="bi bi-arrow-right-circle ms-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Table: 5 Đơn đặt sân mới nhất -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                <h5 class="mb-0 text-dark fw-bold">
+                    <i class="bi bi-clock-history text-primary me-2"></i>5 Đơn Đặt Sân Mới Nhất
+                </h5>
+                <a href="@Url.Action("QuanLyDatSan", "Admin")" class="btn btn-outline-primary btn-sm px-3">
+                    Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+            
+            <div class="card-block p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4" style="width: 60px;">#</th>
+                                <th>Khách hàng</th>
+                                <th>Sân bóng</th>
+                                <th>Ngày chơi</th>
+                                <th>Khung giờ</th>
+                                <th class="text-end">Tổng tiền</th>
+                                <th class="text-center pe-4" style="width: 150px;">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.DonMoiNhat != null && ((IEnumerable<DATSANBONG.Models.DatSan>)ViewBag.DonMoiNhat).Any())
+                            {
+                                int stt = 1;
+                                foreach (var don in (IEnumerable<DATSANBONG.Models.DatSan>)ViewBag.DonMoiNhat)
                                 {
-                                    int stt = 1; // Biến đếm số thứ tự
-                                    foreach (var don in (IEnumerable<DATSANBONG.Models.DatSan>)ViewBag.DonMoiNhat)
-                                    {
-                                        <tr>
-                                            <td class="fw-bold">@stt</td>
-
-                                            @* Hiển thị tên khách hàng từ navigation property NguoiDung *@
-                                            <td>
-                                                <i class="bi bi-person-circle me-1 text-muted"></i>
-                                                @(don.NguoiDung != null ? don.NguoiDung.HoTen : "N/A")
-                                            </td>
-
-                                            @* Hiển thị tên sân từ navigation property SanBong *@
-                                            <td>@(don.SanBong != null ? don.SanBong.TenSan : "N/A")</td>
-
-                                            @* Format ngày: dd/MM/yyyy (kiểu Việt Nam) *@
-                                            <td>@don.NgayDat.ToString("dd/MM/yyyy")</td>
-
-                                            @* Hiển thị giờ bắt đầu - giờ kết thúc *@
-                                            <td>
-                                                @don.GioBatDau.ToString(@"hh\:mm") - @don.GioKetThuc.ToString(@"hh\:mm")
-                                            </td>
-
-                                            @* Format tiền: thêm dấu phân cách nghìn *@
-                                            <td class="fw-bold text-danger">
-                                                @String.Format("{0:N0}", don.TongTien) VNĐ
-                                            </td>
-
-                                            @* Badge trạng thái: đổi màu tùy theo giá trị *@
-                                            <td>
-                                                @{
-                                                    // Chọn màu badge dựa theo trạng thái đơn
-                                                    string badgeClass = "bg-secondary"; // Mặc định: xám
-                                                    if (don.TrangThai == "Đã duyệt")
-                                                    {
-                                                        badgeClass = "bg-success"; // Xanh lá
-                                                    }
-                                                    else if (don.TrangThai == "Chờ duyệt")
-                                                    {
-                                                        badgeClass = "bg-warning text-dark"; // Vàng
-                                                    }
-                                                    else if (don.TrangThai == "Đã hủy")
-                                                    {
-                                                        badgeClass = "bg-danger"; // Đỏ
-                                                    }
-                                                }
-                                                <span class="badge badge-status @badgeClass">@don.TrangThai</span>
-                                            </td>
-                                        </tr>
-                                        stt++; // Tăng số thứ tự
-                                    }
-                                }
-                                else
-                                {
-                                    @* Trường hợp chưa có đơn nào *@
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">
-                                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                            Chưa có đơn đặt sân nào
+                                        <td class="ps-4 fw-bold text-muted">@stt</td>
+                                        <td>
+                                            <div class="fw-bold text-dark">@(don.NguoiDung != null ? don.NguoiDung.HoTen : "N/A")</div>
+                                            <div class="small text-muted">@(don.NguoiDung != null ? don.NguoiDung.SoDienThoai : "")</div>
+                                        </td>
+                                        <td class="fw-bold text-success">@(don.SanBong != null ? don.SanBong.TenSan : "N/A")</td>
+                                        <td>@don.NgayDat.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            @don.GioBatDau.ToString(@"hh\:mm") - @don.GioKetThuc.ToString(@"hh\:mm")
+                                        </td>
+                                        <td class="fw-bold text-danger text-end">
+                                            @String.Format("{0:N0}", don.TongTien) VNĐ
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            @if (don.TrangThai == "Đã duyệt")
+                                            {
+                                                <span class="badge bg-success-light text-success border border-success border-opacity-25 px-2.5 py-1.5 fw-semibold">
+                                                    Đã duyệt
+                                                </span>
+                                            }
+                                            else if (don.TrangThai == "Chờ duyệt")
+                                            {
+                                                <span class="badge bg-warning-light text-warning border border-warning border-opacity-25 px-2.5 py-1.5 fw-semibold">
+                                                    Chờ duyệt
+                                                </span>
+                                            }
+                                            else if (don.TrangThai == "Đã hủy")
+                                            {
+                                                <span class="badge bg-danger-light text-danger border border-danger border-opacity-25 px-2.5 py-1.5 fw-semibold">
+                                                    Đã hủy
+                                                </span>
+                                            }
                                         </td>
                                     </tr>
+                                    stt++;
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                        Chưa có đơn đặt sân nào mới
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    @* ── Nút quản lý nhanh ── *@
-    <div class="row mt-4 g-3">
-        <div class="col-md-4">
-            <a href="@Url.Action("Index", "Admin")" class="btn btn-outline-success w-100 py-3">
-                <i class="bi bi-dribbble me-2"></i>Quản lý Sân Bóng
-            </a>
-        </div>
-        <div class="col-md-4">
-            <a href="@Url.Action("QuanLyKhachHang", "Admin")" class="btn btn-outline-primary w-100 py-3">
-                <i class="bi bi-people me-2"></i>Quản lý Khách Hàng
-            </a>
-        </div>
-        <div class="col-md-4">
-            <a href="@Url.Action("QuanLyDatSan", "Admin")" class="btn btn-outline-warning w-100 py-3">
-                <i class="bi bi-calendar-check me-2"></i>Quản lý Đơn Đặt
-            </a>
+<!-- Quick Admin Links -->
+<div class="row mt-4 g-4">
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 text-center">
+                <div class="fs-2 text-success mb-2">
+                    <i class="bi bi-dribbble"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Quản lý Sân Bóng</h6>
+                <p class="text-muted small mb-3">Thêm mới, sửa đổi thông tin các sân bóng, cập nhật giá giờ thuê và trạng thái.</p>
+                <a href="@Url.Action("Index", "Admin")" class="btn btn-outline-success btn-sm w-100">Xem ngay</a>
+            </div>
         </div>
     </div>
-
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 text-center">
+                <div class="fs-2 text-primary mb-2">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Quản lý Khách Hàng</h6>
+                <p class="text-muted small mb-3">Quản lý danh sách tài khoản khách hàng, thông tin liên lạc và quyền truy cập.</p>
+                <a href="@Url.Action("QuanLyKhachHang", "Admin")" class="btn btn-outline-primary btn-sm w-100">Xem ngay</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 text-center">
+                <div class="fs-2 text-warning mb-2">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Quản lý Đơn Đặt</h6>
+                <p class="text-muted small mb-3">Xem và xét duyệt đơn đặt sân của khách hàng, phê duyệt hoặc từ chối hủy đặt lịch.</p>
+                <a href="@Url.Action("QuanLyDatSan", "Admin")" class="btn btn-outline-warning btn-sm w-100">Xem ngay</a>
+            </div>
+        </div>
+    </div>
 </div>

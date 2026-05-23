@@ -2,77 +2,108 @@
 
 @{
     ViewBag.Title = "Thêm sân bóng mới";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow border-0">
-                <div class="card-header bg-success text-white py-3">
-                    <h5 class="card-title mb-0 fw-bold">
-                        <i class="bi bi-plus-circle me-1"></i>Thêm Sân Bóng Mới
-                    </h5>
-                </div>
-                <div class="card-body p-4">
-                    @using (Html.BeginForm("Create", "Admin", FormMethod.Post, new { enctype = "multipart/form-data", id = "createFieldForm" }))
-                    {
-                        @Html.AntiForgeryToken()
+<!-- Page Header in Admindek Style -->
+<div class="page-header-blue d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="mb-0 fw-bold">Thêm sân bóng mới</h4>
+        <p class="text-muted mb-0 small">Điền các thông tin dưới đây để tạo sân bóng mới trên hệ thống.</p>
+    </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="@Url.Action("Dashboard")">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="@Url.Action("Index")">Sân bóng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Thêm mới</li>
+        </ol>
+    </nav>
+</div>
 
-                        @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+<!-- Create Form Card -->
+<div class="row">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle me-2 text-primary"></i>Thông tin chi tiết sân bóng</h6>
+            </div>
+            <div class="card-body p-4">
+                @using (Html.BeginForm("Create", "Admin", FormMethod.Post, new { enctype = "multipart/form-data", id = "createFieldForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger border-0 mb-4", style = "border-radius: 8px;" })
 
-                        <!-- Tên Sân -->
-                        <div class="mb-3">
-                            @Html.LabelFor(model => model.TenSan, new { @class = "form-label fw-bold" })
-                            @Html.TextBoxFor(model => model.TenSan, new { @class = "form-control", placeholder = "Nhập tên sân bóng..." })
-                            @Html.ValidationMessageFor(model => model.TenSan, "", new { @class = "text-danger small" })
-                        </div>
+                    <!-- Tên Sân -->
+                    <div class="mb-4">
+                        @Html.LabelFor(model => model.TenSan, "Tên sân bóng", new { @class = "form-label fw-bold text-muted small" })
+                        @Html.TextBoxFor(model => model.TenSan, new { @class = "form-control", placeholder = "Ví dụ: Sân A1 - KCN Hòa Khánh..." })
+                        @Html.ValidationMessageFor(model => model.TenSan, "", new { @class = "text-danger small mt-1 d-block" })
+                    </div>
 
+                    <div class="row">
                         <!-- Loại Sân Dropdown -->
-                        <div class="mb-3">
-                            @Html.LabelFor(model => model.MaLoai, new { @class = "form-label fw-bold" })
+                        <div class="col-md-6 mb-4">
+                            @Html.LabelFor(model => model.MaLoai, "Loại sân (Kích thước)", new { @class = "form-label fw-bold text-muted small" })
                             @Html.DropDownList("MaLoai", null, "-- Chọn loại sân --", new { @class = "form-select" })
-                            @Html.ValidationMessageFor(model => model.MaLoai, "", new { @class = "text-danger small" })
+                            @Html.ValidationMessageFor(model => model.MaLoai, "", new { @class = "text-danger small mt-1 d-block" })
                         </div>
 
                         <!-- Giá Theo Giờ -->
-                        <div class="mb-3">
-                            @Html.LabelFor(model => model.GiaTheoGio, new { @class = "form-label fw-bold" })
-                            @Html.TextBoxFor(model => model.GiaTheoGio, new { @class = "form-control", type = "number", min = "0", step = "1000", placeholder = "Ví dụ: 150000" })
-                            @Html.ValidationMessageFor(model => model.GiaTheoGio, "", new { @class = "text-danger small" })
+                        <div class="col-md-6 mb-4">
+                            @Html.LabelFor(model => model.GiaTheoGio, "Giá thuê theo giờ", new { @class = "form-label fw-bold text-muted small" })
+                            <div class="input-group">
+                                @Html.TextBoxFor(model => model.GiaTheoGio, new { @class = "form-control", type = "number", min = "0", step = "1000", placeholder = "Ví dụ: 150000" })
+                                <span class="input-group-text bg-light text-muted">VNĐ</span>
+                            </div>
+                            @Html.ValidationMessageFor(model => model.GiaTheoGio, "", new { @class = "text-danger small mt-1 d-block" })
                         </div>
+                    </div>
 
-                        <!-- File Upload Hình Ảnh -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold" for="fileAnh">Hình ảnh sân bóng</label>
-                            <input type="file" name="fileAnh" id="fileAnh" class="form-control" accept="image/*" />
-                            <div class="form-text">Định dạng hỗ trợ: jpg, jpeg, png. Dung lượng tối đa: 5MB.</div>
-                        </div>
+                    <!-- File Upload Hình Ảnh -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small" for="fileAnh">Hình ảnh sân bóng</label>
+                        <input type="file" name="fileAnh" id="fileAnh" class="form-control" accept="image/*" />
+                        <div class="form-text text-muted small mt-1">Định dạng hỗ trợ: jpg, jpeg, png. Dung lượng tối đa: 5MB.</div>
+                    </div>
 
-                        <!-- Trạng Thái Dropdown -->
-                        <div class="mb-3">
-                            @Html.LabelFor(model => model.TrangThai, new { @class = "form-label fw-bold" })
-                            @Html.DropDownListFor(model => model.TrangThai, new List<SelectListItem>
-                            {
-                                new SelectListItem { Text = "Hoạt động", Value = "Hoạt động", Selected = true },
-                                new SelectListItem { Text = "Ngưng hoạt động", Value = "Ngưng hoạt động" }
-                            }, new { @class = "form-select" })
-                            @Html.ValidationMessageFor(model => model.TrangThai, "", new { @class = "text-danger small" })
-                        </div>
+                    <!-- Trạng Thái Dropdown -->
+                    <div class="mb-4">
+                        @Html.LabelFor(model => model.TrangThai, "Trạng thái hoạt động", new { @class = "form-label fw-bold text-muted small" })
+                        @Html.DropDownListFor(model => model.TrangThai, new List<SelectListItem>
+                        {
+                            new SelectListItem { Text = "Hoạt động", Value = "Hoạt động", Selected = true },
+                            new SelectListItem { Text = "Ngưng hoạt động", Value = "Ngưng hoạt động" }
+                        }, new { @class = "form-select" })
+                        @Html.ValidationMessageFor(model => model.TrangThai, "", new { @class = "text-danger small mt-1 d-block" })
+                    </div>
 
-                        <hr class="my-4" />
+                    <hr class="my-4 text-muted" />
 
-                        <!-- Nút hành động -->
-                        <div class="d-flex gap-2 justify-content-end">
-                            <a href="@Url.Action("Index", "Admin")" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle me-1"></i>Hủy bỏ
-                            </a>
-                            <button type="submit" class="btn btn-success px-4">
-                                <i class="bi bi-save me-1"></i>Lưu thông tin
-                            </button>
-                        </div>
-                    }
-                </div>
+                    <!-- Actions -->
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="@Url.Action("Index", "Admin")" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle me-1.5"></i>Hủy bỏ
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-save me-1.5"></i>Lưu sân bóng
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info Side Widget -->
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm bg-light-blue text-dark mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-info-circle-fill me-2"></i>Hướng dẫn cấu hình</h6>
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i><strong>Tên Sân:</strong> Nên đặt rõ ràng, phân biệt theo cụm hoặc dãy sân để khách dễ nhận biết.</li>
+                    <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i><strong>Loại sân:</strong> Phân chia sân 5 người, 7 người, hay 11 người để áp dụng các mức giá thuê phù hợp.</li>
+                    <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i><strong>Giá thuê:</strong> Giá tính cho mỗi giờ đặt sân. Phân cách bằng số, không nhập ký tự chữ.</li>
+                    <li class="mb-0"><i class="bi bi-check2-circle text-success me-2"></i><strong>Hình ảnh:</strong> Chọn hình ảnh thực tế, sắc nét để gia tăng khả năng đặt sân của khách hàng.</li>
+                </ul>
             </div>
         </div>
     </div>

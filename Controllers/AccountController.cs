@@ -42,13 +42,22 @@ namespace DATSANBONG.Controllers
             Session["HoTen"]  = nd.HoTen;
             Session["VaiTro"] = nd.VaiTro;
 
-            // Điều hướng theo vai trò hoặc returnUrl
+            // Điều hướng người dùng sau khi đăng nhập thành công
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
                 return Redirect(returnUrl);
+            }
 
-            return nd.VaiTro == "Admin"
-                ? RedirectToAction("Index", "Admin")
-                : RedirectToAction("Index", "Home");
+            if (nd.VaiTro == "Admin")
+            {
+                // Chuyển hướng Admin về trang Tổng quan (Dashboard) của AdminController
+                return RedirectToAction("Dashboard", "Admin");
+            }
+            else
+            {
+                // Chuyển hướng Khách hàng về trang chủ của HomeController
+                return RedirectToAction("Index", "Home");
+            }
         }
 
         // ─── ĐĂNG KÝ ──────────────────────────────────────────────────

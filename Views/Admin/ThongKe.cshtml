@@ -1,0 +1,263 @@
+@{
+    ViewBag.Title = "Thống kê doanh thu";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 320px;
+            width: 100%;
+        }
+        .summary-card {
+            border-left: 4px solid;
+            transition: transform 0.2s ease-in-out;
+        }
+        .summary-card:hover {
+            transform: scale(1.02);
+        }
+    </style>
+}
+
+<!-- Page Header in Admindek Style -->
+<div class="page-header-blue d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="mb-0 fw-bold">Thống kê doanh thu</h4>
+        <p class="text-muted mb-0 small">Báo cáo doanh số bán hàng, phân tích cơ cấu doanh thu theo tháng và sân bóng.</p>
+    </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="@Url.Action("Dashboard")">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Thống kê doanh thu</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Quick Statistics Summary Row -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm summary-card bg-white p-3" style="border-left-color: #0d6efd;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted small fw-semibold text-uppercase mb-1">Năm báo cáo</h6>
+                    <h4 class="fw-bold mb-0 text-dark">@DateTime.Now.Year</h4>
+                </div>
+                <div class="fs-2 text-primary">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm summary-card bg-white p-3" style="border-left-color: #198754;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted small fw-semibold text-uppercase mb-1">Tổng doanh thu năm</h6>
+                    <h4 class="fw-bold mb-0 text-success" id="lblTotalRevenue">0 VNĐ</h4>
+                </div>
+                <div class="fs-2 text-success">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm summary-card bg-white p-3" style="border-left-color: #ffc107;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted small fw-semibold text-uppercase mb-1">Sân hiệu quả nhất</h6>
+                    <h4 class="fw-bold mb-0 text-warning" id="lblBestField">Đang tính...</h4>
+                </div>
+                <div class="fs-2 text-warning">
+                    <i class="bi bi-trophy"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4">
+    <!-- Monthly Revenue Chart (Bar Chart) -->
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 text-dark fw-bold">
+                    <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Biểu đồ doanh thu 12 tháng (@DateTime.Now.Year)
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Field Shares Chart (Doughnut Chart) -->
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 text-dark fw-bold">
+                    <i class="bi bi-pie-chart-fill text-success me-2"></i>Tỷ lệ doanh thu theo sân
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="fieldsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- ChartJS library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fetch JSON statistics data
+            fetch('@Url.Action("GetDoanhThuJson", "Admin")')
+                .then(response => response.json())
+                .then(data => {
+                    renderMonthlyChart(data.monthly);
+                    renderFieldsChart(data.fields);
+                    calculateSummaries(data.monthly, data.fields);
+                })
+                .catch(err => console.error("Lỗi khi tải dữ liệu thống kê:", err));
+
+            // 1. Draw Monthly Revenue Bar Chart
+            function renderMonthlyChart(monthlyData) {
+                var labels = monthlyData.map(item => item.Month);
+                var values = monthlyData.map(item => item.Revenue);
+
+                var ctx = document.getElementById('monthlyChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Doanh thu (VNĐ)',
+                            data: values,
+                            backgroundColor: 'rgba(13, 110, 253, 0.75)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            borderWidth: 1.5,
+                            borderRadius: 4,
+                            barThickness: 24
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        var value = context.raw || 0;
+                                        return 'Doanh thu: ' + value.toLocaleString('vi-VN') + ' VNĐ';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function (value) {
+                                        if (value >= 1000000) {
+                                            return (value / 1000000) + ' M';
+                                        }
+                                        return value.toLocaleString('vi-VN');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Draw Field Split Doughnut Chart
+            function renderFieldsChart(fieldsData) {
+                var labels = fieldsData.map(item => item.FieldName);
+                var values = fieldsData.map(item => item.Revenue);
+
+                // Palette colors
+                var colors = [
+                    '#20c997', // Teal
+                    '#0d6efd', // Blue
+                    '#fd7e14', // Orange
+                    '#ffc107', // Yellow
+                    '#6f42c1', // Purple
+                    '#dc3545', // Red
+                    '#198754'  // Green
+                ];
+
+                var ctx = document.getElementById('fieldsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colors.slice(0, fieldsData.length),
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        var value = context.raw || 0;
+                                        var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        var percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return context.label + ': ' + value.toLocaleString('vi-VN') + ' VNĐ (' + percent + '%)';
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+
+            // Calculate overall quick statistics
+            function calculateSummaries(monthly, fields) {
+                // Calculate Total Revenue
+                var total = monthly.reduce((sum, item) => sum + item.Revenue, 0);
+                document.getElementById('lblTotalRevenue').innerText = total.toLocaleString('vi-VN') + ' VNĐ';
+
+                // Find Best Football Field
+                if (fields && fields.length > 0) {
+                    var bestField = fields.reduce((max, item) => item.Revenue > max.Revenue ? item : max, fields[0]);
+                    if (bestField.Revenue > 0) {
+                        document.getElementById('lblBestField').innerText = bestField.FieldName;
+                    } else {
+                        document.getElementById('lblBestField').innerText = 'Chưa có doanh thu';
+                    }
+                } else {
+                    document.getElementById('lblBestField').innerText = 'Không có sân';
+                }
+            }
+        });
+    </script>
+}

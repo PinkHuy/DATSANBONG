@@ -2,65 +2,110 @@
 
 @{
     ViewBag.Title = "Quản lý sân bóng";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Quản lý sân bóng</h2>
-    
-    <p>
-        <a href="@Url.Action("Create")" class="btn btn-success">
-            <i class="fas fa-plus"></i> Thêm sân bóng mới
+<!-- Page Header in Admindek Style -->
+<div class="page-header-blue d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">Quản lý sân bóng</h4>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="@Url.Action("Dashboard")">Giao diện Admin</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Sân bóng</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Main Card Component -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0 text-dark fw-bold">
+            <i class="bi bi-dribbble text-success me-2"></i>Danh sách các sân bóng
+        </h5>
+        <a href="@Url.Action("Create")" class="btn btn-primary btn-sm px-3">
+            <i class="bi bi-plus-circle me-1"></i> Thêm sân bóng mới
         </a>
-    </p>
+    </div>
     
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>Tên Sân</th>
-                    <th>Loại Sân</th>
-                    <th>Giá Thuê (Giờ)</th>
-                    <th>Hình Ảnh</th>
-                    <th>Trạng Thái</th>
-                    <th class="text-center">Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var item in Model) {
+    <div class="card-block p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Mã Sân</th>
+                        <th>Tên Sân</th>
+                        <th>Loại Sân</th>
+                        <th>Giá Thuê (Giờ)</th>
+                        <th>Hình Ảnh</th>
+                        <th>Trạng Thái</th>
+                        <th class="text-center pe-4" style="width: 200px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold text-muted">#@item.MaSan</td>
+                                <td class="fw-bold text-dark">@item.TenSan</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        @(item.LoaiSan != null ? item.LoaiSan.TenLoai : "Chưa phân loại")
+                                    </span>
+                                </td>
+                                <td class="text-danger fw-bold">
+                                    @String.Format("{0:N0} VNĐ", item.GiaTheoGio)
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.HinhAnh))
+                                    {
+                                        <img src="~/Content/Images/SanBong/@item.HinhAnh" alt="@item.TenSan" class="img-thumbnail" style="width: 80px; height: 50px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small italic">Chưa có ảnh</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.TrangThai == "Hoạt động")
+                                    {
+                                        <span class="badge bg-success-light text-success border border-success border-opacity-25 px-2.5 py-1.5 fw-semibold">
+                                            <i class="bi bi-check-circle me-1"></i>Hoạt động
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-light text-danger border border-danger border-opacity-25 px-2.5 py-1.5 fw-semibold">
+                                            <i class="bi bi-x-circle me-1"></i>Ngưng hoạt động
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center pe-4">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a href="@Url.Action("Edit", new { id = item.MaSan })" class="btn btn-primary btn-sm px-2.5 py-1.5" title="Chỉnh sửa">
+                                            <i class="bi bi-pencil-square me-1"></i> Sửa
+                                        </a>
+                                        <a href="@Url.Action("Delete", new { id = item.MaSan })" class="btn btn-danger btn-sm px-2.5 py-1.5" title="Xóa bỏ" 
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa sân bóng này? Dữ liệu không thể phục hồi!');">
+                                            <i class="bi bi-trash me-1"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
                         <tr>
-                            <td class="fw-bold">@item.TenSan</td>
-                            <td>@(item.LoaiSan != null ? item.LoaiSan.TenLoai : "N/A")</td>
-                            <td class="text-danger fw-bold">@String.Format("{0:N0} VNĐ", item.GiaTheoGio)</td>
-                            <td>
-                                @if(!string.IsNullOrEmpty(item.HinhAnh))
-                                {
-                                    <img src="~/Content/Images/SanBong/@item.HinhAnh" alt="@item.TenSan" class="img-thumbnail" style="width: 120px; height: auto;" />
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Chưa có ảnh</span>
-                                }
-                            </td>
-                            <td>
-                                <span class="badge bg-info text-dark">@item.TrangThai</span>
-                            </td>
-                            <td class="text-center">
-                                <a href="@Url.Action("Edit", new { id = item.MaSan })" class="btn btn-primary btn-sm m-1">Sửa</a>
-                                <a href="@Url.Action("Delete", new { id = item.MaSan })" class="btn btn-danger btn-sm m-1" onclick="return confirm('Bạn có chắc chắn muốn xóa sân bóng này? Dữ liệu không thể phục hồi!');">Xóa</a>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                Chưa có dữ liệu sân bóng nào trong cơ sở dữ liệu
                             </td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="6" class="text-center py-4">Chưa có dữ liệu sân bóng</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>

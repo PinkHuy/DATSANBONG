@@ -273,5 +273,77 @@ namespace DATSANBONG.Controllers
 
             return RedirectToAction("QuanLyKhachHang");
         }
+
+        // ============================================================
+        // GET: Admin/LichDatSan
+        // Xem lịch đặt sân dưới dạng FullCalendar ô vuông
+        // ============================================================
+        public ActionResult LichDatSan()
+        {
+            return View();
+        }
+
+        // ============================================================
+        // GET: Admin/GetDatSanJson
+        // Trả về danh sách đơn đặt sân dưới dạng JSON cho FullCalendar
+        // ============================================================
+        public JsonResult GetDatSanJson()
+        {
+            var datSans = db.DatSans.ToList();
+            var events = datSans.Select(d => new {
+                id = d.MaDatSan,
+                title = (d.SanBong != null ? d.SanBong.TenSan : "Sân N/A") + " - " + (d.NguoiDung != null ? d.NguoiDung.HoTen : "Khách N/A"),
+                start = (d.NgayDat.Date + d.GioBatDau).ToString("yyyy-MM-ddTHH:mm:ss"),
+                end = (d.NgayDat.Date + d.GioKetThuc).ToString("yyyy-MM-ddTHH:mm:ss"),
+                color = d.TrangThai == "Đã duyệt" ? "#28a745" : (d.TrangThai == "Chờ duyệt" ? "#ffc107" : "#dc3545"),
+                textColor = d.TrangThai == "Chờ duyệt" ? "#212529" : "#ffffff",
+                extendedProps = new {
+                    status = d.TrangThai,
+                    phone = d.NguoiDung != null ? d.NguoiDung.SoDienThoai : "",
+                    price = d.TongTien.HasValue ? d.TongTien.Value.ToString("N0") + " VNĐ" : "0 VNĐ"
+                }
+            }).ToList();
+
+            return Json(events, JsonRequestBehavior.AllowGet);
+        }
+
+        // ============================================================
+        // GET: Admin/ThongKe
+        // Giao diện vẽ biểu đồ thống kê doanh thu
+        // ============================================================
+        public ActionResult ThongKe()
+        {
+            return View();
+        }
+
+        // ============================================================
+        // GET: Admin/GetDoanhThuJson
+        // Trả về dữ liệu thống kê doanh thu dạng JSON cho Chart.js
+        // ============================================================
+        public JsonResult GetDoanhThuJson()
+        {
+            var currentYear = DateTime.Now.Year;
+            
+            // Lấy tất cả các đơn đặt sân đã duyệt
+            var bookings = db.DatSans
+                .Where(d => d.TrangThai == "Đã duyệt" && d.NgayDat.Year == currentYear)
+                .ToList();
+
+            // Thống kê doanh thu theo 12 tháng
+            var monthlyRevenue = Enumerable.Range(1, 12).Select(month => new {
+                Month = "Tháng " + month,
+                Revenue = bookings.Where(b => b.NgayDat.Month == month).Sum(b => b.TongTien) ?? 0
+            }).ToList();
+
+            // Thống kê doanh thu theo từng sân bóng
+            var fieldRevenue = db.SanBongs.ToList().Select(s => new {
+                FieldName = s.TenSan,
+                Revenue = db.DatSans
+                    .Where(d => d.MaSan == s.MaSan && d.TrangThai == "Đã duyệt")
+                    .Sum(d => d.TongTien) ?? 0
+            }).ToList();
+
+            return Json(new { monthly = monthlyRevenue, fields = fieldRevenue }, JsonRequestBehavior.AllowGet);
+        }
     }
 }

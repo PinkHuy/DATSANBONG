@@ -1,0 +1,182 @@
+@{
+    ViewBag.Title = "Lịch đặt sân bóng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <!-- FullCalendar CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <style>
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .fc-header-toolbar {
+            margin-bottom: 1.5rem !important;
+        }
+        .fc-button-primary {
+            background-color: #007bff !important;
+            border-color: #007bff !important;
+        }
+        .fc-button-primary:hover {
+            background-color: #0056b3 !important;
+            border-color: #0056b3 !important;
+        }
+        .fc-button-active {
+            background-color: #004085 !important;
+            border-color: #004085 !important;
+        }
+        .fc-event {
+            cursor: pointer;
+            padding: 2px 4px;
+            font-size: 0.85em;
+            border-radius: 4px;
+            border: none !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+    </style>
+}
+
+<!-- Page Header in Admindek Style -->
+<div class="page-header-blue d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="mb-0 fw-bold">Lịch đặt sân bóng</h4>
+        <p class="text-muted mb-0 small">Theo dõi trực quan trạng thái đặt sân bóng theo dạng lịch biểu ô vuông.</p>
+    </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="@Url.Action("Dashboard")">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Lịch đặt sân</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Calendar Card Container -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+        <h5 class="mb-0 text-dark fw-bold">
+            <i class="bi bi-calendar3 text-primary me-2"></i>Lịch biểu đặt sân trực quan
+        </h5>
+        <!-- Color Legend Info -->
+        <div class="d-flex gap-3 small">
+            <div>
+                <span class="legend-dot" style="background-color: #28a745;"></span>
+                <span class="text-muted fw-semibold">Đã duyệt</span>
+            </div>
+            <div>
+                <span class="legend-dot" style="background-color: #ffc107;"></span>
+                <span class="text-muted fw-semibold">Chờ duyệt</span>
+            </div>
+            <div>
+                <span class="legend-dot" style="background-color: #dc3545;"></span>
+                <span class="text-muted fw-semibold">Đã hủy</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-block p-4">
+        <!-- FullCalendar Hook element -->
+        <div id="calendar"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- FullCalendar JS and Language CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/vi.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'vi',
+                timeZone: 'local',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                buttonText: {
+                    today: 'Hôm nay',
+                    month: 'Tháng',
+                    week: 'Tuần',
+                    day: 'Ngày'
+                },
+                events: '@Url.Action("GetDatSanJson", "Admin")',
+                eventClick: function (info) {
+                    // Extract fields
+                    var titleParts = info.event.title.split(' - ');
+                    var fieldName = titleParts[0] || 'Sân bóng';
+                    var customerName = titleParts[1] || 'Khách hàng';
+                    
+                    var options = { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' };
+                    var startText = new Date(info.event.start).toLocaleDateString('vi-VN', options);
+                    var endText = new Date(info.event.end).toLocaleDateString('vi-VN', options);
+
+                    var statusText = info.event.extendedProps.status;
+                    var badgeClass = 'bg-secondary';
+                    if (statusText === 'Đã duyệt') badgeClass = 'bg-success';
+                    else if (statusText === 'Chờ duyệt') badgeClass = 'bg-warning text-dark';
+                    else if (statusText === 'Đã hủy') badgeClass = 'bg-danger';
+
+                    // Display event detail using SweetAlert2
+                    Swal.fire({
+                        title: '<h5 class="fw-bold m-0 text-primary"><i class="bi bi-info-circle me-1"></i> Chi Tiết Đơn Đặt Sân</h5>',
+                        html: `
+                            <div class="text-start border-top pt-3">
+                                <div class="mb-2"><strong>Sân bóng:</strong> <span class="text-success fw-bold">${fieldName}</span></div>
+                                <div class="mb-2"><strong>Khách hàng:</strong> <span class="fw-bold">${customerName}</span></div>
+                                <div class="mb-2"><strong>Số điện thoại:</strong> <span>${info.event.extendedProps.phone || 'Chưa cung cấp'}</span></div>
+                                <div class="mb-2"><strong>Thời gian chơi:</strong> <span class="text-dark">${startText.split(' ')[1]} - ${endText.split(' ')[1]}</span></div>
+                                <div class="mb-2"><strong>Ngày đặt:</strong> <span>${startText.split(' ')[0]}</span></div>
+                                <div class="mb-2"><strong>Tổng tiền thanh toán:</strong> <span class="text-danger fw-bold">${info.event.extendedProps.price}</span></div>
+                                <div class="mb-2"><strong>Trạng thái đơn:</strong> <span class="badge ${badgeClass} px-2.5 py-1.5 fw-semibold">${statusText}</span></div>
+                            </div>
+                        `,
+                        showCancelButton: statusText === 'Chờ duyệt',
+                        confirmButtonText: 'Đóng lại',
+                        cancelButtonText: '<i class="bi bi-check-circle me-1"></i> Duyệt ngay',
+                        customClass: {
+                            confirmButton: 'btn btn-secondary px-3 me-2',
+                            cancelButton: 'btn btn-success px-3'
+                        },
+                        buttonsStyling: false
+                    }).then((result) => {
+                        // Quick approve shortcut from the calendar
+                        if (result.dismiss === Swal.DismissReason.cancel) {
+                            Swal.fire({
+                                title: 'Xác nhận phê duyệt',
+                                text: 'Bạn có chắc chắn muốn phê duyệt đơn đặt sân này?',
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonText: 'Đồng ý',
+                                cancelButtonText: 'Quay lại',
+                                customClass: {
+                                    confirmButton: 'btn btn-success me-2',
+                                    cancelButton: 'btn btn-outline-secondary'
+                                },
+                                buttonsStyling: false
+                            }).then((approveRes) => {
+                                if (approveRes.isConfirmed) {
+                                    window.location.href = '@Url.Action("DuyetDon", "Admin")/' + info.event.id;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+            calendar.render();
+        });
+    </script>
+}
