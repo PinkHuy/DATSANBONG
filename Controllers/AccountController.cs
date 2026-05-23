@@ -37,10 +37,19 @@ namespace DATSANBONG.Controllers
                 return View(model);
             }
 
-            // Lưu session
-            Session["MaND"]   = nd.MaND;
-            Session["HoTen"]  = nd.HoTen;
-            Session["VaiTro"] = nd.VaiTro;
+            // Lưu session và chuẩn hóa vai trò
+            string role = nd.VaiTro;
+            if (role == "ChuSan") role = "Owner";
+
+            Session["MaND"]     = nd.MaND;
+            Session["HoTen"]    = nd.HoTen;
+            Session["VaiTro"]   = role;
+            Session["UserRole"] = role;
+
+            if (role == "Owner")
+            {
+                Session["MaChuSan"] = nd.MaND;
+            }
 
             // Điều hướng người dùng sau khi đăng nhập thành công
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -48,9 +57,9 @@ namespace DATSANBONG.Controllers
                 return Redirect(returnUrl);
             }
 
-            if (nd.VaiTro == "Admin")
+            if (role == "Admin" || role == "Owner")
             {
-                // Chuyển hướng Admin về trang Tổng quan (Dashboard) của AdminController
+                // Chuyển hướng Admin và Chủ sân (Owner) về trang Tổng quan (Dashboard) của AdminController
                 return RedirectToAction("Dashboard", "Admin");
             }
             else
@@ -97,9 +106,10 @@ namespace DATSANBONG.Controllers
             int maND = _db.ThemNguoiDung(nguoiDung);
 
             // Tự động đăng nhập sau khi đăng ký
-            Session["MaND"]   = maND;
-            Session["HoTen"]  = nguoiDung.HoTen;
-            Session["VaiTro"] = nguoiDung.VaiTro;
+            Session["MaND"]     = maND;
+            Session["HoTen"]    = nguoiDung.HoTen;
+            Session["VaiTro"]   = nguoiDung.VaiTro;
+            Session["UserRole"] = nguoiDung.VaiTro;
 
             TempData["ThanhCong"] = "Đăng ký thành công! Chào mừng bạn đến với DatSanBong.";
             return RedirectToAction("Index", "Home");

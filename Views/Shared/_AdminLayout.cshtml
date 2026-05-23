@@ -172,12 +172,15 @@
                     </li>
 
                     <!-- Khách Hàng -->
-                    <li class="nav-item">
-                        <a href="@Url.Action("QuanLyKhachHang", "Admin")" class="nav-link @(action == "quanlykhachhang" ? "active" : "")">
-                            <i class="bi bi-people icon-start"></i>
-                            <p class="mb-0 d-inline-block">Quản lý khách hàng</p>
-                        </a>
-                    </li>
+                    @if (Session["VaiTro"] != null && Session["VaiTro"].ToString() == "Admin")
+                    {
+                        <li class="nav-item">
+                            <a href="@Url.Action("QuanLyKhachHang", "Admin")" class="nav-link @(action == "quanlykhachhang" ? "active" : "")">
+                                <i class="bi bi-people icon-start"></i>
+                                <p class="mb-0 d-inline-block">Quản lý khách hàng</p>
+                            </a>
+                        </li>
+                    }
 
                     <li class="nav-item text-uppercase text-secondary fs-7 mt-3 px-3"><small>TÍNH NĂNG NÂNG CAO</small></li>
 
@@ -196,6 +199,17 @@
                             <p class="mb-0 d-inline-block">Thống kê doanh thu</p>
                         </a>
                     </li>
+
+                    @if (Session["VaiTro"] != null && (Session["VaiTro"].ToString() == "Owner" || Session["VaiTro"].ToString() == "ChuSan"))
+                    {
+                        <!-- Cấu hình giá theo giờ -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("CauHinhGia", "Admin")" class="nav-link @(action == "cauhinhgia" ? "active" : "")">
+                                <i class="bi bi-currency-dollar icon-start"></i>
+                                <p class="mb-0 d-inline-block">Cấu hình giá theo giờ</p>
+                            </a>
+                        </li>
+                    }
                 </ul>
             </div>
         </nav>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?><Database Name="QuanLySanBong_MVC" Class="DataClasses1DataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+<?xml version="1.0" encoding="utf-8"?><Database Name="QuanLySanBong_MVC" Class="DataClasses1DataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
   <Table Name="dbo.DatSan" Member="DatSans">
     <Type Name="DatSan">
       <Column Name="MaDatSan" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -41,6 +41,7 @@
       <Column Name="GiaTheoGio" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
       <Column Name="HinhAnh" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
       <Column Name="TrangThai" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="MaChuSan" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Association Name="SanBong_DatSan" Member="DatSans" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
       <Association Name="LoaiSan_SanBong" Member="LoaiSan" ThisKey="MaLoai" OtherKey="MaLoai" Type="LoaiSan" IsForeignKey="true" />
     </Type>
