@@ -1,0 +1,144 @@
+@model DATSANBONG.Models.SanBongViewModel
+
+@{
+    ViewBag.Title = Model.TenSan;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var slots = ViewBag.Slots as List<DATSANBONG.Models.TimeSlotViewModel>;
+    var selectedDate = ViewBag.SelectedDate as string;
+}
+
+<section class="dsb-section min-vh-100 text-white py-5">
+    <div class="container">
+        <!-- Breadcrumb / Back button -->
+        <div class="mb-4">
+            <a href="@Url.Action("Index", "SanBong")" class="text-success text-decoration-none fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left column: Sân bóng Info & Image -->
+            <div class="col-lg-6">
+                <div class="bg-dark rounded-4 overflow-hidden border border-secondary border-opacity-25 shadow-lg">
+                    <div style="width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #1c2128;">
+                        @if (string.IsNullOrEmpty(Model.HinhAnh))
+                        {
+                            <img src="~/Content/Images/default-field.jpg" class="w-100 h-100 object-fit-cover" alt="@Model.TenSan" />
+                        }
+                        else
+                        {
+                            <img src="~/Content/Images/SanBong/@Model.HinhAnh" class="w-100 h-100 object-fit-cover" alt="@Model.TenSan" />
+                        }
+                    </div>
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h2 class="fw-bold text-white mb-2">@Model.TenSan</h2>
+                            <span class="badge @(Model.TrangThai == "Hoạt động" ? "bg-success text-dark" : "bg-danger text-white") px-3 py-2 fw-bold">
+                                @Model.TrangThai
+                            </span>
+                        </div>
+                        
+                        <p class="text-success fw-bold mb-3">
+                            <i class="bi bi-pentagon-fill me-1"></i>@Model.TenLoai
+                        </p>
+
+                        <hr class="border-secondary border-opacity-50 my-3" />
+
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <span class="text-white-50 d-block small">Giá sân</span>
+                                <span class="fs-5 fw-bold text-white">@Model.GiaFormatted</span>
+                            </div>
+                            <div class="col-6 text-end">
+                                <span class="text-white-50 d-block small">Địa điểm</span>
+                                <span class="text-white"><i class="bi bi-geo-alt-fill text-success me-1"></i>TP. Cần Thơ</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="@Url.Action("DatSan", "DatSan", new { maSan = Model.MaSan })" class="btn btn-success btn-lg w-100 fw-bold py-3" style="background-color: var(--clr-primary, #16a34a); border-color: var(--clr-primary, #16a34a);">
+                                <i class="bi bi-calendar-plus me-2"></i>Đặt sân này ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right column: Lịch đặt / Khung giờ trống -->
+            <div class="col-lg-6">
+                <div class="bg-dark p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg h-100">
+                    <h3 class="fw-bold mb-3 text-white">
+                        <i class="bi bi-calendar3 text-success me-2"></i>Lịch Trống Trong Ngày
+                    </h3>
+                    <p class="text-white-50 small">Vui lòng chọn ngày để xem danh sách các khung giờ trống của sân.</p>
+
+                    <!-- Date picker form -->
+                    <form method="get" id="dateFilterForm" class="mb-4">
+                        <input type="hidden" name="id" value="@Model.MaSan" />
+                        <div class="row g-2 align-items-center">
+                            <div class="col-auto">
+                                <label class="col-form-label fw-bold text-white-50">Chọn ngày:</label>
+                            </div>
+                            <div class="col">
+                                <input type="date" name="ngayDat" id="selectedNgayDat" class="form-control bg-dark text-white border-secondary shadow-none" 
+                                       value="@selectedDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Slots Grid / List -->
+                    <div style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                        <table class="table table-dark table-striped table-hover align-middle border border-secondary border-opacity-25 rounded">
+                            <thead>
+                                <tr>
+                                    <th class="border-secondary border-opacity-50">Khung Giờ</th>
+                                    <th class="border-secondary border-opacity-50 text-center">Trạng Thái</th>
+                                    <th class="border-secondary border-opacity-50 text-end">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (slots != null && slots.Any())
+                                {
+                                    foreach (var slot in slots)
+                                    {
+                                        <tr>
+                                            <td class="border-secondary border-opacity-25 fw-bold">@slot.KhungGioStr</td>
+                                            <td class="border-secondary border-opacity-25 text-center">
+                                                @if (slot.DaDat)
+                                                {
+                                                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-3 py-1">Đã đặt</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-1">Còn trống</span>
+                                                }
+                                            </td>
+                                            <td class="border-secondary border-opacity-25 text-end">
+                                                @if (!slot.DaDat)
+                                                {
+                                                    <a href="@Url.Action("DatSan", "DatSan", new { maSan = Model.MaSan, ngayDat = selectedDate, gioBatDau = slot.BatDau.ToString(@"hh\:mm"), gioKetThuc = slot.KetThuc.ToString(@"hh\:mm") })" class="btn btn-outline-success btn-sm fw-bold">
+                                                        Đặt slot này
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn-secondary btn-sm" disabled>Hết chỗ</button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-3">Không có khung giờ nào khả dụng</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,138 @@
+@model List<DATSANBONG.Models.DatSan>
+
+@{
+    ViewBag.Title = "Quản lý đơn đặt sân";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentFilter = ViewBag.TrangThaiChon as string;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-calendar-check-fill text-success me-2"></i>Quản Lý Đặt Sân
+        </h2>
+        <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-outline-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>Về Dashboard
+        </a>
+    </div>
+
+    <!-- Bộ lọc trạng thái -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-3">
+            <form method="get" action="@Url.Action("QuanLyDatSan", "Admin")" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label class="col-form-label fw-bold text-muted">Lọc theo trạng thái:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="trangThai" class="form-select shadow-none" onchange="this.form.submit()">
+                        <option value="" @(string.IsNullOrEmpty(currentFilter) ? "selected" : "")>-- Tất cả trạng thái --</option>
+                        <option value="Chờ duyệt" @(currentFilter == "Chờ duyệt" ? "selected" : "")>Chờ duyệt</option>
+                        <option value="Đã duyệt" @(currentFilter == "Đã duyệt" ? "selected" : "")>Đã duyệt</option>
+                        <option value="Đã hủy" @(currentFilter == "Đã hủy" ? "selected" : "")>Đã hủy</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info text-center py-5 shadow-sm border-0 rounded-3">
+            <i class="bi bi-calendar-x fs-1 text-info mb-3 d-block"></i>
+            <h5 class="fw-bold">Không tìm thấy đơn đặt sân nào</h5>
+            <p class="text-muted mb-0">Hệ thống chưa ghi nhận đơn đặt sân nào phù hợp với bộ lọc này.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Khách hàng</th>
+                                <th>Sân bóng</th>
+                                <th>Ngày chơi</th>
+                                <th>Khung giờ</th>
+                                <th class="text-end">Thành tiền</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-center pe-4" style="width: 200px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <!-- Khách hàng -->
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark">@item.NguoiDung.HoTen</div>
+                                        <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@item.NguoiDung.SoDienThoai</div>
+                                    </td>
+                                    <!-- Sân bóng -->
+                                    <td>
+                                        <div class="fw-bold text-success">@item.SanBong.TenSan</div>
+                                        <div class="small text-muted"><i class="bi bi-tag me-1"></i>@item.SanBong.LoaiSan.TenLoai</div>
+                                    </td>
+                                    <!-- Ngày chơi -->
+                                    <td>
+                                        @item.NgayDat.ToString("dd/MM/yyyy")
+                                    </td>
+                                    <!-- Khung giờ -->
+                                    <td class="fw-bold">
+                                        @{
+                                            string startStr = item.GioBatDau.ToString(@"hh\:mm");
+                                            string endStr = (item.GioKetThuc.Hours == 23 && item.GioKetThuc.Minutes == 59) ? "24:00" : item.GioKetThuc.ToString(@"hh\:mm");
+                                        }
+                                        @startStr - @endStr
+                                    </td>
+                                    <!-- Thành tiền -->
+                                    <td class="text-end fw-bold text-dark">
+                                        @(item.TongTien.HasValue ? item.TongTien.Value.ToString("N0") + " ₫" : "—")
+                                    </td>
+                                    <!-- Trạng thái -->
+                                    <td class="text-center">
+                                        @if (item.TrangThai == "Chờ duyệt")
+                                        {
+                                            <span class="badge bg-warning text-dark px-3 py-2 fw-bold">Chờ duyệt</span>
+                                        }
+                                        else if (item.TrangThai == "Đã duyệt")
+                                        {
+                                            <span class="badge bg-success text-white px-3 py-2 fw-bold">Đã duyệt</span>
+                                        }
+                                        else if (item.TrangThai == "Đã hủy")
+                                        {
+                                            <span class="badge bg-danger text-white px-3 py-2 fw-bold">Đã hủy</span>
+                                        }
+                                    </td>
+                                    <!-- Nút duyệt / hủy -->
+                                    <td class="text-center pe-4">
+                                        @if (item.TrangThai == "Chờ duyệt")
+                                        {
+                                            <div class="d-flex gap-2 justify-content-center">
+                                                <a href="@Url.Action("DuyetDon", "Admin", new { id = item.MaDatSan })" 
+                                                   class="btn btn-success btn-sm fw-bold px-3" 
+                                                   onclick="return confirm('Bạn có chắc muốn PHÊ DUYỆT đơn đặt sân này không?');">
+                                                    <i class="bi bi-check-circle me-1"></i>Duyệt
+                                                </a>
+                                                <a href="@Url.Action("HuyDon", "Admin", new { id = item.MaDatSan })" 
+                                                   class="btn btn-outline-danger btn-sm fw-bold px-3" 
+                                                   onclick="return confirm('Bạn có chắc muốn HỦY đơn đặt sân này không?');">
+                                                    <i class="bi bi-x-circle me-1"></i>Hủy
+                                                </a>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-light btn-sm text-muted" disabled>Đã xử lý</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

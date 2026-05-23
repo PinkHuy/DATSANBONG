@@ -1,0 +1,131 @@
+@model List<DATSANBONG.Models.DatSanViewModel>
+
+@{
+    ViewBag.Title = "Lịch sử đặt sân";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="dsb-section min-vh-100 text-white py-5">
+    <div class="container">
+        <!-- Title and Icon -->
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h2 class="fw-bold mb-0 text-white">
+                <i class="bi bi-clock-history text-success me-2"></i>Lịch Sử Đặt Sân
+            </h2>
+            <a href="@Url.Action("Index", "SanBong")" class="btn btn-success fw-bold" style="background-color: var(--clr-primary, #16a34a); border-color: var(--clr-primary, #16a34a);">
+                <i class="bi bi-plus-circle me-1"></i>Đặt sân mới
+            </a>
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <!-- Empty state -->
+            <div class="bg-dark p-5 rounded-4 border border-secondary border-opacity-25 shadow text-center">
+                <i class="bi bi-calendar2-x text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 text-white-50">Bạn chưa đặt sân nào</h4>
+                <p class="text-muted">Hãy chọn sân bóng và đặt những trận cầu kịch tính ngay hôm nay!</p>
+                <a href="@Url.Action("Index", "SanBong")" class="btn btn-success fw-bold px-4 py-2 mt-2" style="background-color: var(--clr-primary, #16a34a); border-color: var(--clr-primary, #16a34a);">
+                    Đặt sân ngay
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- Booking history list -->
+            <div class="bg-dark p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover align-middle border border-secondary border-opacity-25 rounded mb-0">
+                        <thead>
+                            <tr>
+                                <th class="border-secondary border-opacity-50">Ảnh sân</th>
+                                <th class="border-secondary border-opacity-50">Tên sân</th>
+                                <th class="border-secondary border-opacity-50">Ngày đặt</th>
+                                <th class="border-secondary border-opacity-50">Khung giờ</th>
+                                <th class="border-secondary border-opacity-50 text-end">Tổng tiền</th>
+                                <th class="border-secondary border-opacity-50 text-center">Trạng thái</th>
+                                <th class="border-secondary border-opacity-50 text-center">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <!-- Image -->
+                                    <td class="border-secondary border-opacity-25" style="width: 100px;">
+                                        <div class="rounded overflow-hidden" style="width: 80px; aspect-ratio: 16/9; background: #1c2128;">
+                                            @if (string.IsNullOrEmpty(item.HinhAnh))
+                                            {
+                                                <img src="~/Content/Images/default-field.jpg" class="w-100 h-100 object-fit-cover" alt="@item.TenSan" />
+                                            }
+                                            else
+                                            {
+                                                <img src="~/Content/Images/SanBong/@item.HinhAnh" class="w-100 h-100 object-fit-cover" alt="@item.TenSan" />
+                                            }
+                                        </div>
+                                    </td>
+                                    <!-- Field name & type -->
+                                    <td class="border-secondary border-opacity-25">
+                                        <span class="fw-bold text-white d-block">@item.TenSan</span>
+                                        <span class="text-success small fw-semibold">@item.TenLoai</span>
+                                    </td>
+                                    <!-- Date -->
+                                    <td class="border-secondary border-opacity-25">
+                                        @item.NgayDatFormatted
+                                    </td>
+                                    <!-- Time -->
+                                    <td class="border-secondary border-opacity-25 fw-bold">
+                                        @{
+                                            string startStr = item.GioBatDau.ToString(@"hh\:mm");
+                                            string endStr = (item.GioKetThuc.Hours == 23 && item.GioKetThuc.Minutes == 59) ? "24:00" : item.GioKetThuc.ToString(@"hh\:mm");
+                                        }
+                                        @startStr - @endStr
+                                    </td>
+                                    <!-- Price -->
+                                    <td class="border-secondary border-opacity-25 text-end fw-bold text-success">
+                                        @item.TongTienFormatted
+                                    </td>
+                                    <!-- Status Badge -->
+                                    <td class="border-secondary border-opacity-25 text-center">
+                                        @if (item.TrangThai == "Chờ duyệt")
+                                        {
+                                            <span class="badge bg-warning text-dark px-3 py-2 fw-bold">Chờ duyệt</span>
+                                        }
+                                        else if (item.TrangThai == "Đã duyệt")
+                                        {
+                                            <span class="badge bg-success text-dark px-3 py-2 fw-bold">Đã duyệt</span>
+                                        }
+                                        else if (item.TrangThai == "Đã hủy")
+                                        {
+                                            <span class="badge bg-danger text-white px-3 py-2 fw-bold">Đã hủy</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary text-white px-3 py-2 fw-bold">@item.TrangThai</span>
+                                        }
+                                    </td>
+                                    <!-- Cancel Button -->
+                                    <td class="border-secondary border-opacity-25 text-center">
+                                        @if (item.TrangThai == "Chờ duyệt")
+                                        {
+                                            using (Html.BeginForm("HuyDatSan", "DatSan", new { id = item.MaDatSan }, FormMethod.Post, new { onsubmit = "return confirm('Bạn có chắc chắn muốn hủy đơn đặt sân này không?');" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-danger btn-sm fw-bold">
+                                                    <i class="bi bi-x-circle me-1"></i>Hủy
+                                                </button>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-secondary btn-sm" disabled>Hủy</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</section>

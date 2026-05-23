@@ -1,0 +1,106 @@
+@model List<DATSANBONG.Models.SanBongViewModel>
+
+@{
+    ViewBag.Title = "Danh sách sân bóng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="dsb-section min-vh-100 text-white">
+    <!-- HERO SECTION -->
+    <div class="dsb-hero">
+        <span class="dsb-badge">Hệ thống sân</span>
+        <h1 class="dsb-title">Chọn Sân Của Bạn</h1>
+        <p class="dsb-subtitle text-muted">Trải nghiệm đặt sân bóng chất lượng cao với dịch vụ tốt nhất và mức giá ưu đãi.</p>
+    </div>
+
+    <!-- FILTER SECTION -->
+    <div class="container mb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <form action="@Url.Action("Index", "SanBong")" method="get" class="row g-3 bg-dark p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg">
+                    <div class="col-md-5">
+                        <label class="form-label text-white-50 small fw-bold">Loại sân</label>
+                        <select class="form-select bg-dark text-white border-secondary border-opacity-50 shadow-none py-2" name="loaiSan">
+                            <option value="">-- Tất cả loại sân --</option>
+                            @if (ViewBag.DanhSachLoai != null)
+                            {
+                                foreach (var loai in ViewBag.DanhSachLoai as List<DATSANBONG.Models.LoaiSan>)
+                                {
+                                    <option value="@loai.TenLoai" @(ViewBag.LoaiSanChon == loai.TenLoai ? "selected" : "")>@loai.TenLoai</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label text-white-50 small fw-bold">Tìm tên sân</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50 shadow-none py-2" name="tuKhoa" value="@ViewBag.TuKhoa" placeholder="Nhập tên sân cần tìm..." />
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100 fw-bold py-2" style="background-color: var(--clr-primary, #16a34a); border-color: var(--clr-primary, #16a34a);">
+                            <i class="bi bi-search me-1"></i>Tìm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="dsb-divider">
+        <span>Danh sách sân</span>
+    </div>
+
+    <!-- GRID & CARDS -->
+    <div class="container">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-circle text-muted" style="font-size: 3rem;"></i>
+                <h4 class="mt-3 text-white-50">Chưa có sân nào</h4>
+                <p class="text-muted">Không tìm thấy sân bóng nào phù hợp với bộ lọc của bạn.</p>
+                <a href="@Url.Action("Index", "SanBong")" class="btn btn-outline-success btn-sm mt-2">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Xóa bộ lọc
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="dsb-grid">
+                @foreach (var item in Model)
+                {
+                    <div class="dsb-card" onclick="location.href='@Url.Action("Detail", "SanBong", new { id = item.MaSan })'">
+                        <div class="dsb-img-wrap">
+                            @if (string.IsNullOrEmpty(item.HinhAnh))
+                            {
+                                <img src="~/Content/Images/default-field.jpg" alt="@item.TenSan" />
+                            }
+                            else
+                            {
+                                <img src="~/Content/Images/SanBong/@item.HinhAnh" alt="@item.TenSan" />
+                            }
+                            <div class="dsb-overlay">
+                                <span class="dsb-btn">Xem chi tiết</span>
+                            </div>
+                        </div>
+                        <div class="dsb-body">
+                            <h3 class="dsb-name text-truncate">@item.TenSan</h3>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="text-success small fw-bold">
+                                    <i class="bi bi-pentagon-fill me-1"></i>@item.TenLoai
+                                </span>
+                                <span class="text-white-50 small">
+                                    <i class="bi bi-tag-fill me-1"></i>@item.GiaFormatted
+                                </span>
+                            </div>
+                            <div class="mt-3" onclick="event.stopPropagation();">
+                                <a href="@Url.Action("DatSan", "DatSan", new { maSan = item.MaSan })" class="btn btn-success w-100 fw-bold py-2 btn-dat-ngay" style="background-color: var(--clr-primary, #16a34a); border-color: var(--clr-primary, #16a34a);">
+                                    <i class="bi bi-calendar-check me-2"></i>Đặt ngay
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>

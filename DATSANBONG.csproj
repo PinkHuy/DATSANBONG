@@ -124,6 +124,8 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\SanBongController.cs" />
+    <Compile Include="Controllers\DatSanController.cs" />
     <Compile Include="Data\QuanLySanBongDb.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\DataClasses1.designer.cs">
@@ -504,6 +506,11 @@
     <Content Include="Views\admin\Dashboard.cshtml" />
     <Content Include="Views\admin\Edit.cshtml" />
     <Content Include="Views\admin\Index.cshtml" />
+    <Content Include="Views\Admin\QuanLyDatSan.cshtml" />
+    <Content Include="Views\SanBong\Index.cshtml" />
+    <Content Include="Views\SanBong\Detail.cshtml" />
+    <Content Include="Views\DatSan\DatSan.cshtml" />
+    <Content Include="Views\DatSan\LichSu.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

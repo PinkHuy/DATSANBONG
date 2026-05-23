@@ -171,5 +171,56 @@ namespace DATSANBONG.Controllers
             }
             return RedirectToAction("Index");
         }
+
+        // ============================================================
+        // GET: Admin/QuanLyDatSan
+        // Quản lý tất cả đơn đặt sân của khách hàng
+        // ============================================================
+        public ActionResult QuanLyDatSan(string trangThai)
+        {
+            var query = db.DatSans.AsQueryable();
+
+            if (!string.IsNullOrEmpty(trangThai))
+            {
+                query = query.Where(d => d.TrangThai == trangThai);
+            }
+
+            var listDatSan = query.OrderByDescending(d => d.NgayDat).ToList();
+            ViewBag.TrangThaiChon = trangThai;
+
+            return View(listDatSan);
+        }
+
+        // ============================================================
+        // GET: Admin/DuyetDon/5
+        // Phê duyệt yêu cầu đặt sân
+        // ============================================================
+        public ActionResult DuyetDon(int id)
+        {
+            var don = db.DatSans.SingleOrDefault(d => d.MaDatSan == id);
+            if (don != null)
+            {
+                don.TrangThai = "Đã duyệt";
+                db.SubmitChanges();
+                TempData["ThanhCong"] = "Phê duyệt đơn đặt sân thành công!";
+            }
+            return RedirectToAction("QuanLyDatSan");
+        }
+
+        // ============================================================
+        // GET: Admin/HuyDon/5
+        // Hủy đơn đặt sân
+        // ============================================================
+        public ActionResult HuyDon(int id)
+        {
+            var don = db.DatSans.SingleOrDefault(d => d.MaDatSan == id);
+            if (don != null)
+            {
+                don.TrangThai = "Đã hủy";
+                db.SubmitChanges();
+                TempData["ThanhCong"] = "Đã hủy đơn đặt sân thành công!";
+            }
+            return RedirectToAction("QuanLyDatSan");
+        }
     }
 }

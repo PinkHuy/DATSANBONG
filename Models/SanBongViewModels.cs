@@ -90,4 +90,16 @@ namespace DATSANBONG.Models
 
         public decimal TongTienTinh { get; set; }
     }
+
+    /// <summary>
+    /// ViewModel cho từng khung giờ đặt sân (khung giờ 1 tiếng)
+    /// </summary>
+    public class TimeSlotViewModel
+    {
+        public TimeSpan BatDau { get; set; }
+        public TimeSpan KetThuc { get; set; }
+        public bool DaDat { get; set; }
+
+        public string KhungGioStr => $"{BatDau.ToString(@"hh\:mm")} - {(KetThuc.Days > 0 ? "24:00" : KetThuc.ToString(@"hh\:mm"))}";
+    }
 }
