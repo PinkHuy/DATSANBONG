@@ -165,7 +165,6 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
-    <Content Include="Content\Images\SanBong\703844537_122168739104955045_3087641548653990749_n.jpg" />
     <Content Include="Content\Images\SanBong\San_Bong_Cong_Khuong.jpg" />
     <Content Include="Content\Images\SanBong\San_Bong_Dai_Vu.jpg" />
     <Content Include="Content\Images\SanBong\San_Bong_Hoa_An.jpg" />
