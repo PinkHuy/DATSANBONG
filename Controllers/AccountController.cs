@@ -96,24 +96,24 @@ namespace DATSANBONG.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // ─── ĐĂNG XUẤT ────────────────────────────────────────────────
+        // ─── ĐĂNG XUẤT (LOGOUT) ────────────────────────────────────────
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult DangXuat()
+        public ActionResult Logout()
         {
             Session.Clear();
             Session.Abandon();
-            return RedirectToAction("DangNhap", "Account");
+            return RedirectToAction("Index", "Home");
         }
 
         // GET version cho link đăng xuất (fallback)
         [HttpGet]
-        public ActionResult DangXuatGet()
+        public ActionResult LogoutGet()
         {
             Session.Clear();
             Session.Abandon();
-            return RedirectToAction("DangNhap", "Account");
+            return RedirectToAction("Index", "Home");
         }
     }
 }

@@ -129,6 +129,10 @@ namespace DATSANBONG.Data
         /// <summary>Xoá người dùng theo MaND</summary>
         public void XoaNguoiDung(int maND)
         {
+            // Xoá các đơn đặt sân của khách hàng trước để tránh lỗi ràng buộc khoá ngoại (Foreign Key Constraint)
+            const string sqlDatSan = "DELETE FROM DatSan WHERE MaND = @MaND";
+            ExecuteNonQuery(sqlDatSan, cmd => cmd.Parameters.AddWithValue("@MaND", maND));
+
             const string sql = "DELETE FROM NguoiDung WHERE MaND = @MaND";
             ExecuteNonQuery(sql, cmd => cmd.Parameters.AddWithValue("@MaND", maND));
         }

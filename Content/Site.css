@@ -490,7 +490,7 @@ main {
     border-radius: 1rem;
     padding: 1.5rem 1.75rem;
     box-shadow: 0 8px 40px rgba(0,0,0,.25);
-    max-width: 600px;
+    max-width: 750px;
 }
 
     .hero-search-card .form-select,

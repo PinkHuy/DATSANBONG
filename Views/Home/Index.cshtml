@@ -1,6 +1,7 @@
+@model List<DATSANBONG.Models.SanBong>
+
 @{
     ViewBag.Title = "DatSanBong – Đặt Sân Bóng Nhanh Chóng, Tiện Lợi";
-
 }
 
 
@@ -39,25 +40,31 @@
                         <strong>Tìm sân nhanh</strong>
                     </div>
                     <form action="@Url.Action("Index","SanBong")" method="get" class="row g-2 align-items-end">
-                        <div class="col-12 col-sm-5">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold text-muted mb-1">Tìm tên sân</label>
+                            <input type="text" class="form-control form-control-sm shadow-none"
+                                   name="tuKhoa" id="heroTuKhoa"
+                                   placeholder="Nhập tên sân..." />
+                        </div>
+                        <div class="col-12 col-md-3">
                             <label class="form-label small fw-semibold text-muted mb-1">Loại sân</label>
                             <select class="form-select form-select-sm shadow-none" name="loaiSan" id="heroLoaiSan">
-                                <option value="">-- Tất cả loại sân --</option>
+                                <option value="">-- Tất cả --</option>
                                 <option value="5">Sân 5 người</option>
                                 <option value="7">Sân 7 người</option>
                                 <option value="11">Sân 11 người</option>
                             </select>
                         </div>
-                        <div class="col-12 col-sm-4">
+                        <div class="col-12 col-md-3">
                             <label class="form-label small fw-semibold text-muted mb-1">Ngày đặt</label>
                             <input type="date" class="form-control form-control-sm shadow-none"
                                    name="ngayDat" id="heroNgayDat"
                                    min="@DateTime.Today.ToString("yyyy-MM-dd")"
                                    value="@DateTime.Today.ToString("yyyy-MM-dd")" />
                         </div>
-                        <div class="col-12 col-sm-3">
+                        <div class="col-12 col-md-2">
                             <button type="submit" class="btn btn-success btn-sm w-100 fw-semibold">
-                                <i class="bi bi-search me-1"></i>Tìm kiếm
+                                <i class="bi bi-search me-1"></i>Tìm
                             </button>
                         </div>
                     </form>
@@ -175,100 +182,58 @@
             <p class="section-sub">Những sân bóng được đặt nhiều nhất, đánh giá cao nhất từ cộng đồng</p>
         </div>
         <div class="row g-4">
-            <!-- Card 1 -->
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="field-card">
-                    <div class="field-card-img field-card-img--1">
-                        <div class="field-card-badges">
-                            <span class="field-badge field-badge--hot">🔥 Hot</span>
-                        </div>
-                        <div class="field-card-price-overlay">
-                            <span>từ <strong>150K</strong>/giờ</span>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="field-card h-100">
+                            <!-- Hình ảnh sân bóng -->
+                            <div class="field-card-img" style="background-image: url('@Url.Content(string.IsNullOrEmpty(item.HinhAnh) ? "~/Content/Images/default-field.jpg" : "~/Content/Images/SanBong/" + item.HinhAnh)'); background-size: cover; background-position: center; height: 200px; position: relative;">
+                                <div class="field-card-badges">
+                                    <span class="field-badge field-badge--hot">🔥 Hot</span>
+                                </div>
+                                <div class="field-card-price-overlay">
+                                    <span>từ <strong>@item.GiaTheoGio.ToString("N0")</strong> ₫/giờ</span>
+                                </div>
+                            </div>
+                            <div class="field-card-body d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="field-card-type mb-1">
+                                        <i class="bi bi-pentagon-fill me-1 text-success"></i>@(item.LoaiSan != null ? item.LoaiSan.TenLoai : "Sân bóng")
+                                    </div>
+                                    <h3 class="field-card-title text-truncate" style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">@item.TenSan</h3>
+                                    <div class="field-card-meta mb-3">
+                                        <span><i class="bi bi-geo-alt me-1"></i>TP. Cần Thơ</span>
+                                        @{
+                                            int datCount = item.DatSans.ToList().Count(d => d.TrangThai != "0");
+                                            double rating = 4.8;
+                                            if (item.MaSan % 3 == 0) { rating = 4.9; }
+                                            else if (item.MaSan % 3 == 1) { rating = 4.7; }
+                                        }
+                                        <span><i class="bi bi-star-fill text-warning me-1"></i>@rating (@(10 + datCount * 3) đánh giá)</span>
+                                    </div>
+                                    <div class="field-card-features mb-3">
+                                        <span class="field-tag"><i class="bi bi-lightbulb"></i> Đèn cao áp</span>
+                                        <span class="field-tag"><i class="bi bi-droplet"></i> Tưới cỏ</span>
+                                        <span class="field-tag"><i class="bi bi-car-front"></i> Bãi xe</span>
+                                    </div>
+                                </div>
+                                <a href="@Url.Action("DatSan", "DatSan", new { maSan = item.MaSan })" class="btn btn-book w-100 mt-2">
+                                    <i class="bi bi-calendar-check me-2"></i>Đặt ngay
+                                </a>
+                            </div>
                         </div>
                     </div>
-                    <div class="field-card-body">
-                        <div class="field-card-type mb-1">
-                            <i class="bi bi-pentagon-fill me-1 text-success"></i>Sân 5 người
-                        </div>
-                        <h3 class="field-card-title">Sân Bóng Huỳnh Châu</h3>
-                        <div class="field-card-meta">
-                            <span><i class="bi bi-geo-alt me-1"></i>TP.Cần Thơ</span>
-                            <span><i class="bi bi-star-fill text-warning me-1"></i>4.9 (128 đánh giá)</span>
-                        </div>
-                        <div class="field-card-features">
-                            <span class="field-tag"><i class="bi bi-lightbulb"></i> Đèn cao áp</span>
-                            <span class="field-tag"><i class="bi bi-droplet"></i> Tưới cỏ</span>
-                            <span class="field-tag"><i class="bi bi-car-front"></i> Bãi xe</span>
-                        </div>
-                        <a href="@Url.Action("Index","SanBong")" class="btn btn-book w-100 mt-3">
-                            <i class="bi bi-calendar-check me-2"></i>Đặt ngay
-                        </a>
-                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                    Chưa có sân bóng nổi bật nào được cập nhật.
                 </div>
-            </div>
-            <!-- Card 2 -->
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="field-card field-card--featured">
-                    <div class="field-card-img field-card-img--2">
-                        <div class="field-card-badges">
-                            <span class="field-badge field-badge--new">✨ Mới</span>
-                            <span class="field-badge field-badge--discount">-20%</span>
-                        </div>
-                        <div class="field-card-price-overlay">
-                            <span>từ <strong>200K</strong>/giờ</span>
-                        </div>
-                    </div>
-                    <div class="field-card-body">
-                        <div class="field-card-type mb-1">
-                            <i class="bi bi-heptagon-fill me-1 text-success"></i>Sân 7 người
-                        </div>
-                        <h3 class="field-card-title">Sân Bóng Thủ Đức Arena</h3>
-                        <div class="field-card-meta">
-                            <span><i class="bi bi-geo-alt me-1"></i>Thủ Đức, TP.HCM</span>
-                            <span><i class="bi bi-star-fill text-warning me-1"></i>4.8 (95 đánh giá)</span>
-                        </div>
-                        <div class="field-card-features">
-                            <span class="field-tag"><i class="bi bi-lightbulb"></i> Đèn LED</span>
-                            <span class="field-tag"><i class="bi bi-camera-video"></i> Camera</span>
-                            <span class="field-tag"><i class="bi bi-cup-hot"></i> Canteen</span>
-                        </div>
-                        <a href="@Url.Action("Index","SanBong")" class="btn btn-book w-100 mt-3">
-                            <i class="bi bi-calendar-check me-2"></i>Đặt ngay
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <!-- Card 3 -->
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="field-card">
-                    <div class="field-card-img field-card-img--3">
-                        <div class="field-card-badges">
-                            <span class="field-badge field-badge--hot">🔥 Hot</span>
-                        </div>
-                        <div class="field-card-price-overlay">
-                            <span>từ <strong>350K</strong>/giờ</span>
-                        </div>
-                    </div>
-                    <div class="field-card-body">
-                        <div class="field-card-type mb-1">
-                            <i class="bi bi-circle-fill me-1 text-success"></i>Sân 11 người
-                        </div>
-                        <h3 class="field-card-title">Sân Bóng Bình Thạnh FC</h3>
-                        <div class="field-card-meta">
-                            <span><i class="bi bi-geo-alt me-1"></i>Bình Thạnh, TP.HCM</span>
-                            <span><i class="bi bi-star-fill text-warning me-1"></i>4.7 (72 đánh giá)</span>
-                        </div>
-                        <div class="field-card-features">
-                            <span class="field-tag"><i class="bi bi-lightbulb"></i> Đèn đêm</span>
-                            <span class="field-tag"><i class="bi bi-droplet"></i> Cỏ nhân tạo</span>
-                            <span class="field-tag"><i class="bi bi-car-front"></i> Bãi xe rộng</span>
-                        </div>
-                        <a href="@Url.Action("Index","SanBong")" class="btn btn-book w-100 mt-3">
-                            <i class="bi bi-calendar-check me-2"></i>Đặt ngay
-                        </a>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
         <div class="text-center mt-5">
             <a href="@Url.Action("Index","SanBong")" class="btn btn-outline-success btn-lg px-5 fw-semibold">

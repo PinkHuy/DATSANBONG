@@ -18,6 +18,13 @@ namespace DATSANBONG.Controllers
         // ============================================================
         public ActionResult Index(string loaiSan, string ngayDat, string tuKhoa)
         {
+            if (!string.IsNullOrEmpty(loaiSan))
+            {
+                if (loaiSan == "5") loaiSan = "Sân 5 người";
+                else if (loaiSan == "7") loaiSan = "Sân 7 người";
+                else if (loaiSan == "11") loaiSan = "Sân 11 người";
+            }
+
             // Lấy danh sách tất cả các sân ở trạng thái "Hoạt động" từ ADO.NET helper
             List<SanBong> listSan = _db.LayDanhSachSanBong(chiHoatDong: true);
             List<LoaiSan> listLoai = _db.LayDanhSachLoaiSan();

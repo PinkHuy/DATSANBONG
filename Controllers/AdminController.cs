@@ -8,6 +8,7 @@ using DATSANBONG.Models;
 
 namespace DATSANBONG.Controllers
 {
+    [AdminAuth]
     public class AdminController : Controller
     {
         DataClasses1DataContext db = new DataClasses1DataContext("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=QuanLySanBong_MVC;Integrated Security=True;MultipleActiveResultSets=True");
@@ -91,8 +92,14 @@ namespace DATSANBONG.Controllers
                 {
                     // Lấy tên file
                     var fileName = Path.GetFileName(fileAnh.FileName);
+                    // Đường dẫn thư mục lưu file
+                    var folderPath = Server.MapPath("~/Content/Images/SanBong");
+                    if (!Directory.Exists(folderPath))
+                    {
+                        Directory.CreateDirectory(folderPath);
+                    }
                     // Đường dẫn lưu file
-                    var path = Path.Combine(Server.MapPath("~/Content/Images"), fileName);
+                    var path = Path.Combine(folderPath, fileName);
                     // Lưu file vào server
                     fileAnh.SaveAs(path);
                     // Lưu tên file vào database
@@ -146,7 +153,12 @@ namespace DATSANBONG.Controllers
                     if (fileAnh != null && fileAnh.ContentLength > 0)
                     {
                         var fileName = Path.GetFileName(fileAnh.FileName);
-                        var path = Path.Combine(Server.MapPath("~/Content/Images"), fileName);
+                        var folderPath = Server.MapPath("~/Content/Images/SanBong");
+                        if (!Directory.Exists(folderPath))
+                        {
+                            Directory.CreateDirectory(folderPath);
+                        }
+                        var path = Path.Combine(folderPath, fileName);
                         fileAnh.SaveAs(path);
                         sanBongDB.HinhAnh = fileName;
                     }
@@ -221,6 +233,45 @@ namespace DATSANBONG.Controllers
                 TempData["ThanhCong"] = "Đã hủy đơn đặt sân thành công!";
             }
             return RedirectToAction("QuanLyDatSan");
+        }
+
+        private readonly DATSANBONG.Data.QuanLySanBongDb _dbSB = new DATSANBONG.Data.QuanLySanBongDb();
+
+        // ============================================================
+        // GET: Admin/QuanLyKhachHang
+        // Quản lý danh sách khách hàng (không bao gồm Admin)
+        // ============================================================
+        public ActionResult QuanLyKhachHang()
+        {
+            var users = _dbSB.LayDanhSachNguoiDung()
+                .Where(u => u.VaiTro != "Admin")
+                .ToList();
+
+            return View(users);
+        }
+
+        // ============================================================
+        // GET: Admin/XoaKhachHang/5
+        // Xóa khách hàng nếu không có đơn đặt sân đang hoạt động
+        // ============================================================
+        public ActionResult XoaKhachHang(int id)
+        {
+            // Kiểm tra xem khách hàng có đơn đặt sân nào chưa hủy không
+            var datSans = _dbSB.LayLichSuDatSanTheoNguoiDung(id)
+                .Where(d => d.TrangThai != "Đã hủy")
+                .ToList();
+
+            if (datSans.Any())
+            {
+                TempData["LoiThongBao"] = "Không thể xóa vì khách hàng còn đơn đặt sân đang hoạt động.";
+            }
+            else
+            {
+                _dbSB.XoaNguoiDung(id);
+                TempData["ThanhCong"] = "Xóa khách hàng thành công!";
+            }
+
+            return RedirectToAction("QuanLyKhachHang");
         }
     }
 }
