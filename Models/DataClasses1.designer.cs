@@ -805,6 +805,8 @@ namespace DATSANBONG.Models
 		
 		private System.Nullable<int> _MaChuSan;
 		
+		private System.Nullable<int> _MaSanCha;
+		
 		private EntitySet<DatSan> _DatSans;
 		
 		private EntityRef<LoaiSan> _LoaiSan;
@@ -827,6 +829,8 @@ namespace DATSANBONG.Models
     partial void OnTrangThaiChanged();
     partial void OnMaChuSanChanging(System.Nullable<int> value);
     partial void OnMaChuSanChanged();
+    partial void OnMaSanChaChanging(System.Nullable<int> value);
+    partial void OnMaSanChaChanged();
     #endregion
 		
 		public SanBong()
@@ -976,6 +980,26 @@ namespace DATSANBONG.Models
 					this._MaChuSan = value;
 					this.SendPropertyChanged("MaChuSan");
 					this.OnMaChuSanChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MaSanCha", DbType="Int")]
+		public System.Nullable<int> MaSanCha
+		{
+			get
+			{
+				return this._MaSanCha;
+			}
+			set
+			{
+				if ((this._MaSanCha != value))
+				{
+					this.OnMaSanChaChanging(value);
+					this.SendPropertyChanging();
+					this._MaSanCha = value;
+					this.SendPropertyChanged("MaSanCha");
+					this.OnMaSanChaChanged();
 				}
 			}
 		}

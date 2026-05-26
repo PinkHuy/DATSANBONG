@@ -42,6 +42,14 @@
                             <i class="bi bi-pentagon-fill me-1"></i>@Model.TenLoai
                         </p>
 
+                        @if (Model.MaSanCha.HasValue)
+                        {
+                            <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-20 text-info py-2 px-3 rounded-3 mb-3 small d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                <span>Sân này thuộc sân lớn: <strong class="text-white">@Model.TenSanCha</strong></span>
+                            </div>
+                        }
+
                         <hr class="border-secondary border-opacity-50 my-3" />
 
                         <div class="row g-3">
@@ -66,79 +74,312 @@
 
             <!-- Right column: Lịch đặt / Khung giờ trống -->
             <div class="col-lg-6">
-                <div class="bg-dark p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg h-100">
-                    <h3 class="fw-bold mb-3 text-white">
-                        <i class="bi bi-calendar3 text-success me-2"></i>Lịch Trống Trong Ngày
-                    </h3>
-                    <p class="text-white-50 small">Vui lòng chọn ngày để xem danh sách các khung giờ trống của sân.</p>
+                <div class="bg-dark p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg h-100 d-flex flex-column">
+                    <!-- Navigation Tabs -->
+                    <ul class="nav nav-pills nav-fill mb-3 p-1 bg-black bg-opacity-25 rounded-3 border border-secondary border-opacity-10" id="scheduleTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active text-white fw-bold py-2 rounded-3 small" id="calendar-tab" data-bs-toggle="pill" data-bs-target="#calendar-pane" type="button" role="tab" aria-controls="calendar-pane" aria-selected="true" onclick="setTimeout(function(){ if(window.fcCalendar) { window.fcCalendar.render(); } }, 150);">
+                                <i class="bi bi-calendar-week me-1.5"></i>Lịch biểu tuần
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-white fw-bold py-2 rounded-3 small" id="list-tab" data-bs-toggle="pill" data-bs-target="#list-pane" type="button" role="tab" aria-controls="list-pane" aria-selected="false">
+                                <i class="bi bi-list-task me-1.5"></i>Khung giờ trống trong ngày
+                            </button>
+                        </li>
+                    </ul>
 
-                    <!-- Date picker form -->
-                    <form method="get" id="dateFilterForm" class="mb-4">
-                        <input type="hidden" name="id" value="@Model.MaSan" />
-                        <div class="row g-2 align-items-center">
-                            <div class="col-auto">
-                                <label class="col-form-label fw-bold text-white-50">Chọn ngày:</label>
+                    <div class="tab-content flex-grow-1" id="scheduleTabContent">
+                        <!-- Tab 1: FullCalendar -->
+                        <div class="tab-pane fade show active h-100" id="calendar-pane" role="tabpanel" aria-labelledby="calendar-tab">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="small text-white-50"><i class="bi bi-info-circle me-1"></i>Kéo thả hoặc click chọn ô giờ trống để đặt sân nhanh.</div>
                             </div>
-                            <div class="col">
-                                <input type="date" name="ngayDat" id="selectedNgayDat" class="form-control bg-dark text-white border-secondary shadow-none" 
-                                       value="@selectedDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+                            
+                            <!-- Legend -->
+                            <div class="d-flex flex-wrap gap-3 mb-3 small text-white-50 p-2 bg-black bg-opacity-25 rounded-3 border border-secondary border-opacity-10">
+                                <div class="d-flex align-items-center">
+                                    <span class="d-inline-block rounded-circle me-1.5" style="width: 12px; height: 12px; background-color: #10b981;"></span>
+                                    Đã duyệt
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="d-inline-block rounded-circle me-1.5" style="width: 12px; height: 12px; background-color: #f59e0b;"></span>
+                                    Chờ duyệt
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="d-inline-block rounded-circle me-1.5" style="width: 12px; height: 12px; background-color: #ef4444;"></span>
+                                    Trùng cụm sân (Bận)
+                                </div>
+                            </div>
+
+                            <div id="calendar-container" class="position-relative" style="min-height: 480px;">
+                                <div id="calendar"></div>
                             </div>
                         </div>
-                    </form>
 
-                    <!-- Slots Grid / List -->
-                    <div style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                        <table class="table table-dark table-striped table-hover align-middle border border-secondary border-opacity-25 rounded">
-                            <thead>
-                                <tr>
-                                    <th class="border-secondary border-opacity-50">Khung Giờ</th>
-                                    <th class="border-secondary border-opacity-50 text-center">Trạng Thái</th>
-                                    <th class="border-secondary border-opacity-50 text-end">Hành Động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (slots != null && slots.Any())
-                                {
-                                    foreach (var slot in slots)
-                                    {
+                        <!-- Tab 2: Danh sách khung giờ trống tĩnh -->
+                        <div class="tab-pane fade" id="list-pane" role="tabpanel" aria-labelledby="list-tab">
+                            <h3 class="fw-bold mb-3 text-white fs-5">
+                                <i class="bi bi-calendar3 text-success me-2"></i>Lịch Trống Ngày: <span class="text-success">@selectedDate</span>
+                            </h3>
+                            <p class="text-white-50 small">Vui lòng chọn ngày để xem danh sách các khung giờ trống của sân.</p>
+
+                            <!-- Date picker form -->
+                            <form method="get" id="dateFilterForm" class="mb-4">
+                                <input type="hidden" name="id" value="@Model.MaSan" />
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto">
+                                        <label class="col-form-label fw-bold text-white-50 small">Chọn ngày:</label>
+                                    </div>
+                                    <div class="col">
+                                        <input type="date" name="ngayDat" id="selectedNgayDat" class="form-control bg-dark text-white border-secondary shadow-none form-control-sm" 
+                                               value="@selectedDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+                                    </div>
+                                </div>
+                            </form>
+
+                            <!-- Slots Grid / List -->
+                            <div style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                                <table class="table table-dark table-striped table-hover align-middle border border-secondary border-opacity-25 rounded small">
+                                    <thead>
                                         <tr>
-                                            <td class="border-secondary border-opacity-25 fw-bold">@slot.KhungGioStr</td>
-                                            <td class="border-secondary border-opacity-25 text-center">
-                                                @if (slot.DaDat)
-                                                {
-                                                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-3 py-1">Đã đặt</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-1">Còn trống</span>
-                                                }
-                                            </td>
-                                            <td class="border-secondary border-opacity-25 text-end">
-                                                @if (!slot.DaDat)
-                                                {
-                                                    <a href="@Url.Action("DatSan", "DatSan", new { maSan = Model.MaSan, ngayDat = selectedDate, gioBatDau = slot.BatDau.ToString(@"hh\:mm"), gioKetThuc = slot.KetThuc.ToString(@"hh\:mm") })" class="btn btn-outline-success btn-sm fw-bold">
-                                                        Đặt slot này
-                                                    </a>
-                                                }
-                                                else
-                                                {
-                                                    <button class="btn btn-secondary btn-sm" disabled>Hết chỗ</button>
-                                                }
-                                            </td>
+                                            <th class="border-secondary border-opacity-50">Khung Giờ</th>
+                                            <th class="border-secondary border-opacity-50 text-center">Trạng Thái</th>
+                                            <th class="border-secondary border-opacity-50 text-end">Hành Động</th>
                                         </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted py-3">Không có khung giờ nào khả dụng</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                                    </thead>
+                                    <tbody>
+                                        @if (slots != null && slots.Any())
+                                        {
+                                            foreach (var slot in slots)
+                                            {
+                                                <tr>
+                                                    <td class="border-secondary border-opacity-25 fw-bold">@slot.KhungGioStr</td>
+                                                    <td class="border-secondary border-opacity-25 text-center">
+                                                        @if (slot.DaDat)
+                                                        {
+                                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-3 py-1">Đã đặt</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-1">Còn trống</span>
+                                                        }
+                                                    </td>
+                                                    <td class="border-secondary border-opacity-25 text-end">
+                                                        @if (!slot.DaDat)
+                                                        {
+                                                            <a href="@Url.Action("DatSan", "DatSan", new { maSan = Model.MaSan, ngayDat = selectedDate, gioBatDau = slot.BatDau.ToString(@"hh\:mm"), gioKetThuc = slot.KetThuc.ToString(@"hh\:mm") })" class="btn btn-outline-success btn-sm fw-bold">
+                                                                Đặt slot này
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button class="btn btn-secondary btn-sm" disabled>Hết chỗ</button>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-3">Không có khung giờ nào khả dụng</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<style>
+    #calendar {
+        background-color: #1a1f26;
+        border-radius: 12px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        color: #fff;
+        font-family: inherit;
+    }
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .fc-theme-standard .fc-scrollgrid {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .fc .fc-col-header-cell-cushion {
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 13px;
+    }
+    .fc .fc-timegrid-slot-label-cushion {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+    }
+    .fc .fc-timegrid-axis-cushion {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    .fc .fc-button-primary {
+        background-color: #16a34a !important;
+        border-color: #16a34a !important;
+        color: #fff !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease;
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+    .fc .fc-button-primary:hover {
+        background-color: #15803d !important;
+        border-color: #15803d !important;
+        transform: translateY(-1px);
+    }
+    .fc .fc-button-primary:disabled {
+        background-color: #374151 !important;
+        border-color: #374151 !important;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 14px !important;
+        font-weight: bold;
+        color: #fff;
+    }
+    .fc-event {
+        cursor: pointer;
+        border-radius: 6px !important;
+        padding: 1px 3px !important;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .fc-event:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+    .fc-v-event .fc-event-main {
+        color: #fff !important;
+    }
+    .nav-pills .nav-link.active {
+        background-color: #16a34a !important;
+    }
+    .nav-pills .nav-link {
+        transition: all 0.2s ease;
+    }
+    .nav-pills .nav-link:hover:not(.active) {
+        background-color: rgba(255,255,255,0.05);
+    }
+    .fc-header-toolbar {
+        margin-bottom: 10px !important;
+    }
+</style>
+
+@section Scripts {
+    <!-- FullCalendar JS UMD bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            var maSan = @Model.MaSan;
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                locale: 'vi',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'timeGridWeek,timeGridDay'
+                },
+                buttonText: {
+                    today: 'Hôm nay',
+                    week: 'Tuần',
+                    day: 'Ngày'
+                },
+                slotDuration: '01:00:00',
+                slotMinTime: '05:00:00',
+                slotMaxTime: '24:00:00',
+                allDaySlot: false,
+                expandRows: true,
+                height: 500,
+                selectable: true,
+                selectMirror: true,
+                unselectAuto: true,
+                firstDay: 1, // Thứ 2
+                slotEventOverlap: false,
+                events: function(info, successCallback, failureCallback) {
+                    var startStr = info.start.toISOString().split('T')[0];
+                    var endStr = info.end.toISOString().split('T')[0];
+                    
+                    fetch(`/DatSan/GetEventsJson?maSan=${maSan}&start=${startStr}&end=${endStr}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            successCallback(data);
+                        })
+                        .catch(err => {
+                            console.error('Lỗi khi tải lịch đặt sân:', err);
+                            failureCallback(err);
+                        });
+                },
+                selectAllow: function(selectInfo) {
+                    return selectInfo.start >= new Date();
+                },
+                select: function(info) {
+                    var durationHours = (info.end - info.start) / 3600000;
+                    if (durationHours > 12) {
+                        calendar.unselect();
+                        return;
+                    }
+
+                    var startDate = info.start;
+                    var endDate = info.end;
+
+                    var year = startDate.getFullYear();
+                    var month = String(startDate.getMonth() + 1).padStart(2, '0');
+                    var day = String(startDate.getDate()).padStart(2, '0');
+                    var dateStr = `${year}-${month}-${day}`;
+
+                    var startHour = String(startDate.getHours()).padStart(2, '0');
+                    var startMin = String(startDate.getMinutes()).padStart(2, '0');
+                    var startStr = `${startHour}:${startMin}`;
+
+                    var endHour = String(endDate.getHours()).padStart(2, '0');
+                    var endMin = String(endDate.getMinutes()).padStart(2, '0');
+                    var endStr = `${endHour}:${endMin}`;
+
+                    if (confirm(`Bạn muốn đặt sân này vào ngày ${day}/${month}/${year} từ ${startStr} đến ${endStr} chứ?`)) {
+                        var url = `/DatSan/DatSan?maSan=${maSan}&ngayDat=${dateStr}&gioBatDau=${startStr}&gioKetThuc=${endStr}`;
+                        window.location.href = url;
+                    }
+                    calendar.unselect();
+                },
+                eventClick: function(info) {
+                    var title = info.event.title;
+                    var start = info.event.start;
+                    var end = info.event.end;
+                    var props = info.event.extendedProps;
+                    
+                    var year = start.getFullYear();
+                    var month = String(start.getMonth() + 1).padStart(2, '0');
+                    var day = String(start.getDate()).padStart(2, '0');
+
+                    var startHour = String(start.getHours()).padStart(2, '0');
+                    var startMin = String(start.getMinutes()).padStart(2, '0');
+                    
+                    var endHour = String(end.getHours()).padStart(2, '0');
+                    var endMin = String(end.getMinutes()).padStart(2, '0');
+
+                    var infoText = `Khung giờ: ${startHour}:${startMin} - ${endHour}:${endMin} (${day}/${month}/${year})\nTrạng thái: ${props.trangThai}`;
+                    if (!props.isCurrent) {
+                        infoText += `\nLưu ý: Khung giờ này bận do trùng lịch đặt của sân liên quan (${props.tenSan}).`;
+                    }
+                    alert(infoText);
+                }
+            });
+
+            calendar.render();
+            window.fcCalendar = calendar;
+        });
+    </script>
+}

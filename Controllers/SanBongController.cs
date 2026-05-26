@@ -88,7 +88,9 @@ namespace DATSANBONG.Controllers
                 MoTaLoai = listLoai.FirstOrDefault(l => l.MaLoai == s.MaLoai)?.MoTa,
                 GiaTheoGio = s.GiaTheoGio,
                 HinhAnh = s.HinhAnh,
-                TrangThai = s.TrangThai
+                TrangThai = s.TrangThai,
+                MaSanCha = s.MaSanCha,
+                TenSanCha = s.MaSanCha.HasValue ? _db.LaySanBongTheoMa(s.MaSanCha.Value)?.TenSan : null
             };
 
             // Xác định ngày kiểm tra lịch đặt (mặc định là ngày mai nếu không truyền hợp lệ)

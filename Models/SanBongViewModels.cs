@@ -20,6 +20,8 @@ namespace DATSANBONG.Models
         public decimal GiaTheoGio { get; set; }
         public string HinhAnh    { get; set; }
         public string TrangThai  { get; set; }
+        public int?   MaSanCha   { get; set; }
+        public string TenSanCha  { get; set; }
 
         public string GiaFormatted => GiaTheoGio.ToString("N0") + " ₫/giờ";
         public bool   DangHoatDong => TrangThai == "Hoạt động";

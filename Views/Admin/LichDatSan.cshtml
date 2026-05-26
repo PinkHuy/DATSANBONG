@@ -36,6 +36,11 @@
             border-radius: 4px;
             border: none !important;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .fc-event:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }
         .legend-dot {
             width: 12px;
@@ -43,6 +48,23 @@
             border-radius: 50%;
             display: inline-block;
             margin-right: 6px;
+        }
+        /* Style cho dropdown lọc sân */
+        .filter-select {
+            min-width: 220px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #334155;
+            background-color: #f8fafc;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .filter-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+            outline: none;
         }
     </style>
 }
@@ -63,23 +85,37 @@
 
 <!-- Calendar Card Container -->
 <div class="card border-0 shadow-sm">
-    <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+    <div class="card-header bg-white d-flex align-items-center justify-content-between py-3 flex-wrap gap-2">
         <h5 class="mb-0 text-dark fw-bold">
             <i class="bi bi-calendar3 text-primary me-2"></i>Lịch biểu đặt sân trực quan
         </h5>
-        <!-- Color Legend Info -->
-        <div class="d-flex gap-3 small">
-            <div>
-                <span class="legend-dot" style="background-color: #28a745;"></span>
-                <span class="text-muted fw-semibold">Đã duyệt</span>
+
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <!-- ========== BỘ LỌC SÂN NHỎ (Tính năng 1) ========== -->
+            <div class="d-flex align-items-center gap-2">
+                <label for="filterSan" class="text-muted small fw-semibold mb-0 text-nowrap">
+                    <i class="bi bi-funnel-fill text-primary me-1"></i>Lọc sân:
+                </label>
+                <select id="filterSan" class="filter-select">
+                    <option value="0">-- Tất cả sân --</option>
+                    <!-- Các option sẽ được nạp động bằng AJAX -->
+                </select>
             </div>
-            <div>
-                <span class="legend-dot" style="background-color: #ffc107;"></span>
-                <span class="text-muted fw-semibold">Chờ duyệt</span>
-            </div>
-            <div>
-                <span class="legend-dot" style="background-color: #dc3545;"></span>
-                <span class="text-muted fw-semibold">Đã hủy</span>
+
+            <!-- Color Legend Info -->
+            <div class="d-flex gap-3 small">
+                <div>
+                    <span class="legend-dot" style="background-color: #28a745;"></span>
+                    <span class="text-muted fw-semibold">Đã duyệt</span>
+                </div>
+                <div>
+                    <span class="legend-dot" style="background-color: #ffc107;"></span>
+                    <span class="text-muted fw-semibold">Chờ duyệt</span>
+                </div>
+                <div>
+                    <span class="legend-dot" style="background-color: #dc3545;"></span>
+                    <span class="text-muted fw-semibold">Đã hủy</span>
+                </div>
             </div>
         </div>
     </div>
@@ -98,6 +134,30 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var calendarEl = document.getElementById('calendar');
+            var filterSanEl = document.getElementById('filterSan');
+            var baseUrl = '@Url.Action("GetLichDatSan", "Admin")';
+
+            // ====================================================
+            // 1. NẠP DANH SÁCH SÂN NHỎ VÀO DROPDOWN
+            // ====================================================
+            fetch('@Url.Action("GetDanhSachSanNho", "Admin")')
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    data.forEach(function (san) {
+                        var option = document.createElement('option');
+                        option.value = san.maSan;
+                        option.textContent = san.tenSan;
+                        filterSanEl.appendChild(option);
+                    });
+                })
+                .catch(function (err) {
+                    console.error('Lỗi khi tải danh sách sân:', err);
+                });
+
+            // ====================================================
+            // 2. KHỞI TẠO FULLCALENDAR VỚI EVENTS FUNCTION
+            //    (cho phép truyền tham số maSan khi refetch)
+            // ====================================================
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'vi',
@@ -113,7 +173,15 @@
                     week: 'Tuần',
                     day: 'Ngày'
                 },
-                events: '@Url.Action("GetDatSanJson", "Admin")',
+                // Sử dụng events dạng function để truyền tham số lọc maSan
+                events: function (fetchInfo, successCallback, failureCallback) {
+                    var selectedSan = filterSanEl.value || '0';
+                    var url = baseUrl + '?maSan=' + selectedSan;
+                    fetch(url)
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) { successCallback(data); })
+                        .catch(function (err) { failureCallback(err); });
+                },
                 eventClick: function (info) {
                     // Extract fields
                     var titleParts = info.event.title.split(' - ');
@@ -177,6 +245,13 @@
                 }
             });
             calendar.render();
+
+            // ====================================================
+            // 3. SỰ KIỆN THAY ĐỔI DROPDOWN → REFETCH LỊCH
+            // ====================================================
+            filterSanEl.addEventListener('change', function () {
+                calendar.refetchEvents();
+            });
         });
     </script>
 }

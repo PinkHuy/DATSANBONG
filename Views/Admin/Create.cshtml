@@ -77,6 +77,14 @@
                         @Html.ValidationMessageFor(model => model.TrangThai, "", new { @class = "text-danger small mt-1 d-block" })
                     </div>
 
+                    <!-- Sân Cha (Cấu hình Cụm Sân) -->
+                    <div class="mb-4">
+                        @Html.LabelFor(model => model.MaSanCha, "Thuộc sân lớn (Nếu sân này là sân con bên trong)", new { @class = "form-label fw-bold text-muted small" })
+                        @Html.DropDownList("MaSanCha", null, "-- Sân độc lập (Không thuộc sân nào) --", new { @class = "form-select" })
+                        @Html.ValidationMessageFor(model => model.MaSanCha, "", new { @class = "text-danger small mt-1 d-block" })
+                        <div class="form-text text-muted small mt-1">Lưu ý: Thiết lập này giúp tự động kiểm tra trùng lịch chéo giữa sân lớn và các sân nhỏ bên trong.</div>
+                    </div>
+
                     <hr class="my-4 text-muted" />
 
                     <!-- Actions -->

@@ -74,6 +74,14 @@
                         @Html.ValidationMessageFor(model => model.TrangThai, "", new { @class = "text-danger small mt-1 d-block" })
                     </div>
 
+                    <!-- Sân Cha (Cấu hình Cụm Sân) -->
+                    <div class="mb-4">
+                        @Html.LabelFor(model => model.MaSanCha, "Thuộc sân lớn (Nếu sân này là sân con bên trong)", new { @class = "form-label fw-bold text-muted small" })
+                        @Html.DropDownList("MaSanCha", null, "-- Sân độc lập (Không thuộc sân nào) --", new { @class = "form-select" })
+                        @Html.ValidationMessageFor(model => model.MaSanCha, "", new { @class = "text-danger small mt-1 d-block" })
+                        <div class="form-text text-muted small mt-1">Lưu ý: Chọn sân lớn nếu sân này nằm bên trong một sân bóng lớn khác (ví dụ: sân 5 người con nằm trong sân 11 người cha).</div>
+                    </div>
+
                     <!-- Image Display and Upload -->
                     <div class="mb-4">
                         <label class="form-label fw-bold text-muted small d-block">Hình ảnh hiện tại</label>

@@ -18,6 +18,49 @@
         .summary-card:hover {
             transform: scale(1.02);
         }
+        /* Bảng thống kê theo sân */
+        .stats-table th {
+            background-color: #f1f5f9;
+            font-size: 0.82em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .stats-table td {
+            vertical-align: middle;
+            font-size: 0.9em;
+        }
+        .stats-table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+        .stats-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        .stats-table tfoot td {
+            font-weight: 700;
+            background-color: #eef2ff;
+            border-top: 2px solid #c7d2fe !important;
+        }
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        .rank-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8em;
+        }
+        .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; }
+        .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #a0522d); color: #fff; }
+        .rank-default { background: #e2e8f0; color: #475569; }
     </style>
 }
 
@@ -79,7 +122,7 @@
 </div>
 
 <!-- Charts Row -->
-<div class="row g-4">
+<div class="row g-4 mb-4">
     <!-- Monthly Revenue Chart (Bar Chart) -->
     <div class="col-12 col-lg-8">
         <div class="card border-0 shadow-sm">
@@ -113,13 +156,67 @@
     </div>
 </div>
 
+<!-- ========== BẢNG THỐNG KÊ CHI TIẾT TỪNG SÂN (Tính năng 2) ========== -->
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 text-dark fw-bold">
+                    <i class="bi bi-table text-info me-2"></i>Thống kê chi tiết từng sân trong cụm
+                </h5>
+                <span class="badge bg-info text-white px-3 py-2" id="badgeTongSan">0 sân</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover stats-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width: 50px;">Hạng</th>
+                                <th>Tên sân</th>
+                                <th class="text-center">Tổng đơn</th>
+                                <th class="text-center"><span class="text-success">Đã duyệt</span></th>
+                                <th class="text-center"><span class="text-warning">Chờ duyệt</span></th>
+                                <th class="text-center"><span class="text-danger">Đã hủy</span></th>
+                                <th class="text-end">Doanh thu</th>
+                                <th style="min-width: 160px;">Tỷ lệ lấp đầy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyThongKeSan">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                    Đang tải dữ liệu thống kê...
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot id="tfootTongCum" style="display: none;">
+                            <tr>
+                                <td colspan="2" class="text-end text-primary fw-bold">TỔNG CỤM SÂN</td>
+                                <td class="text-center" id="ftTongDon">0</td>
+                                <td class="text-center text-success" id="ftDaDuyet">0</td>
+                                <td class="text-center text-warning" id="ftChoDuyet">0</td>
+                                <td class="text-center text-danger" id="ftDaHuy">0</td>
+                                <td class="text-end text-primary fw-bold" id="ftDoanhThu">0 VNĐ</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <!-- ChartJS library CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Fetch JSON statistics data
+
+            // ====================================================
+            // A. TẢI DỮ LIỆU BIỂU ĐỒ DOANH THU (giữ nguyên)
+            // ====================================================
             fetch('@Url.Action("GetDoanhThuJson", "Admin")')
                 .then(response => response.json())
                 .then(data => {
@@ -256,6 +353,82 @@
                     }
                 } else {
                     document.getElementById('lblBestField').innerText = 'Không có sân';
+                }
+            }
+
+            // ====================================================
+            // B. TẢI BẢNG THỐNG KÊ CHI TIẾT TỪNG SÂN (Tính năng 2)
+            // ====================================================
+            fetch('@Url.Action("GetThongKeTheoSan", "Admin")')
+                .then(response => response.json())
+                .then(data => {
+                    renderStatsTable(data.sanList, data.tongCum);
+                })
+                .catch(err => {
+                    console.error("Lỗi khi tải thống kê theo sân:", err);
+                    document.getElementById('tbodyThongKeSan').innerHTML =
+                        '<tr><td colspan="8" class="text-center text-danger py-4">Không thể tải dữ liệu thống kê.</td></tr>';
+                });
+
+            function renderStatsTable(sanList, tongCum) {
+                var tbody = document.getElementById('tbodyThongKeSan');
+                var tfoot = document.getElementById('tfootTongCum');
+
+                // Cập nhật badge số sân
+                document.getElementById('badgeTongSan').textContent = sanList.length + ' sân';
+
+                if (!sanList || sanList.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Không có sân nào trong cụm.</td></tr>';
+                    return;
+                }
+
+                // Render từng hàng sân
+                var html = '';
+                sanList.forEach(function (san, index) {
+                    var rank = index + 1;
+                    var rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-default';
+
+                    // Tính màu progress bar
+                    var progressColor = san.tyLeLapDay >= 70 ? 'bg-success'
+                                      : san.tyLeLapDay >= 40 ? 'bg-warning'
+                                      : 'bg-danger';
+
+                    html += '<tr>';
+                    // Hạng
+                    html += '<td class="text-center"><span class="rank-badge ' + rankClass + '">' + rank + '</span></td>';
+                    // Tên sân
+                    html += '<td class="fw-semibold text-dark">' + san.tenSan + '</td>';
+                    // Tổng đơn
+                    html += '<td class="text-center"><span class="badge bg-light text-dark border px-2">' + san.tongDon + '</span></td>';
+                    // Đã duyệt
+                    html += '<td class="text-center text-success fw-semibold">' + san.daDuyet + '</td>';
+                    // Chờ duyệt
+                    html += '<td class="text-center text-warning fw-semibold">' + san.choDuyet + '</td>';
+                    // Đã hủy
+                    html += '<td class="text-center text-danger fw-semibold">' + san.daHuy + '</td>';
+                    // Doanh thu
+                    html += '<td class="text-end fw-bold text-primary">' + san.doanhThu.toLocaleString('vi-VN') + ' <small class="text-muted">VNĐ</small></td>';
+                    // Tỷ lệ lấp đầy (thanh progress)
+                    html += '<td>';
+                    html += '  <div class="d-flex align-items-center gap-2">';
+                    html += '    <div class="progress flex-grow-1">';
+                    html += '      <div class="progress-bar ' + progressColor + '" role="progressbar" style="width: ' + san.tyLeLapDay + '%;"></div>';
+                    html += '    </div>';
+                    html += '    <span class="fw-bold small text-nowrap" style="min-width: 42px;">' + san.tyLeLapDay + '%</span>';
+                    html += '  </div>';
+                    html += '</td>';
+                    html += '</tr>';
+                });
+                tbody.innerHTML = html;
+
+                // Render dòng tổng cụm sân
+                if (tongCum) {
+                    document.getElementById('ftTongDon').textContent = tongCum.tongDon;
+                    document.getElementById('ftDaDuyet').textContent = tongCum.daDuyet;
+                    document.getElementById('ftChoDuyet').textContent = tongCum.choDuyet;
+                    document.getElementById('ftDaHuy').textContent = tongCum.daHuy;
+                    document.getElementById('ftDoanhThu').innerHTML = tongCum.doanhThu.toLocaleString('vi-VN') + ' <small>VNĐ</small>';
+                    tfoot.style.display = '';
                 }
             }
         });

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using DATSANBONG.Models;
@@ -180,7 +181,7 @@ namespace DATSANBONG.Data
         public List<SanBong> LayDanhSachSanBong(bool chiHoatDong = false)
         {
             string sql = @"
-                SELECT s.MaSan, s.TenSan, s.MaLoai, s.GiaTheoGio, s.HinhAnh, s.TrangThai,
+                SELECT s.MaSan, s.TenSan, s.MaLoai, s.GiaTheoGio, s.HinhAnh, s.TrangThai, s.MaSanCha,
                        l.TenLoai, l.MoTa AS MoTaLoai
                 FROM   SanBong s
                 JOIN   LoaiSan l ON s.MaLoai = l.MaLoai";
@@ -193,7 +194,7 @@ namespace DATSANBONG.Data
         public SanBong LaySanBongTheoMa(int maSan)
         {
             const string sql = @"
-                SELECT s.MaSan, s.TenSan, s.MaLoai, s.GiaTheoGio, s.HinhAnh, s.TrangThai,
+                SELECT s.MaSan, s.TenSan, s.MaLoai, s.GiaTheoGio, s.HinhAnh, s.TrangThai, s.MaSanCha,
                        l.TenLoai, l.MoTa AS MoTaLoai
                 FROM   SanBong s
                 JOIN   LoaiSan l ON s.MaLoai = l.MaLoai
@@ -215,8 +216,8 @@ namespace DATSANBONG.Data
         public int ThemSanBong(SanBong san)
         {
             const string sql = @"
-                INSERT INTO SanBong (TenSan, MaLoai, GiaTheoGio, HinhAnh, TrangThai)
-                VALUES (@TenSan, @MaLoai, @GiaTheoGio, @HinhAnh, @TrangThai);
+                INSERT INTO SanBong (TenSan, MaLoai, GiaTheoGio, HinhAnh, TrangThai, MaSanCha)
+                VALUES (@TenSan, @MaLoai, @GiaTheoGio, @HinhAnh, @TrangThai, @MaSanCha);
                 SELECT SCOPE_IDENTITY();";
 
             using (var conn = GetConnection())
@@ -227,6 +228,7 @@ namespace DATSANBONG.Data
                 cmd.Parameters.AddWithValue("@GiaTheoGio", san.GiaTheoGio);
                 cmd.Parameters.AddWithValue("@HinhAnh", (object)san.HinhAnh ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@TrangThai", san.TrangThai ?? "Hoạt động");
+                cmd.Parameters.AddWithValue("@MaSanCha", (object)san.MaSanCha ?? DBNull.Value);
                 conn.Open();
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
@@ -237,7 +239,7 @@ namespace DATSANBONG.Data
             const string sql = @"
                 UPDATE SanBong
                 SET    TenSan = @TenSan, MaLoai = @MaLoai, GiaTheoGio = @GiaTheoGio,
-                       HinhAnh = @HinhAnh, TrangThai = @TrangThai
+                       HinhAnh = @HinhAnh, TrangThai = @TrangThai, MaSanCha = @MaSanCha
                 WHERE  MaSan = @MaSan";
 
             ExecuteNonQuery(sql, cmd =>
@@ -248,6 +250,7 @@ namespace DATSANBONG.Data
                 cmd.Parameters.AddWithValue("@GiaTheoGio", san.GiaTheoGio);
                 cmd.Parameters.AddWithValue("@HinhAnh", (object)san.HinhAnh ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@TrangThai", san.TrangThai);
+                cmd.Parameters.AddWithValue("@MaSanCha", (object)san.MaSanCha ?? DBNull.Value);
             });
         }
 
@@ -351,6 +354,49 @@ namespace DATSANBONG.Data
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Kiểm tra trùng lịch đặt sân có xét đến quan hệ phân cấp cụm sân (cha-con)
+        /// </summary>
+        public bool KiemTraTrungLichPhanCap(int maSan, DateTime ngayDat, TimeSpan gioBatDau, TimeSpan gioKetThuc, int? maDatSanBoQua = null)
+        {
+            // 1. Xác định danh sách ID của các sân liên quan (bản thân sân đó, sân cha nếu có, và các sân con nếu có)
+            var relatedSanIds = new List<int> { maSan };
+            
+            var san = LaySanBongTheoMa(maSan);
+            if (san != null)
+            {
+                // Nếu là sân con, thêm ID sân cha
+                if (san.MaSanCha.HasValue)
+                {
+                    relatedSanIds.Add(san.MaSanCha.Value);
+                }
+                
+                // Nếu là sân cha, tìm và thêm ID của tất cả sân con trực thuộc
+                var tatCaSan = LayDanhSachSanBong();
+                var sanConIds = tatCaSan.Where(s => s.MaSanCha == maSan).Select(s => s.MaSan).ToList();
+                relatedSanIds.AddRange(sanConIds);
+            }
+
+            // 2. Lấy toàn bộ lịch đặt sân đang chờ duyệt hoặc đã duyệt của các sân liên quan trong ngày này
+            var existingBookings = LayTatCaDatSan()
+                .Where(d => d.MaSan.HasValue && 
+                            relatedSanIds.Contains(d.MaSan.Value) && 
+                            d.NgayDat.Date == ngayDat.Date && 
+                            d.TrangThai != "Đã hủy")
+                .ToList();
+
+            if (maDatSanBoQua.HasValue)
+            {
+                existingBookings = existingBookings.Where(d => d.MaDatSan != maDatSanBoQua.Value).ToList();
+            }
+
+            // 3. Kiểm tra xem có bất kỳ lịch đặt nào bị trùng lặp thời gian hay không
+            return existingBookings.Any(b => {
+                TimeSpan bEndCompare = (b.GioKetThuc.Hours == 23 && b.GioKetThuc.Minutes == 59) ? new TimeSpan(24, 0, 0) : b.GioKetThuc;
+                return b.GioBatDau < gioKetThuc && bEndCompare > gioBatDau;
+            });
         }
 
         /// <summary>Cập nhật trạng thái đơn đặt sân</summary>
@@ -533,8 +579,19 @@ namespace DATSANBONG.Data
             san.GiaTheoGio = (decimal)r["GiaTheoGio"];
             san.HinhAnh = r["HinhAnh"] == DBNull.Value ? null : r["HinhAnh"].ToString();
             san.TrangThai = r["TrangThai"] == DBNull.Value ? "Hoạt động" : r["TrangThai"].ToString();
-            // Gán LoaiSan tạm (không dùng EntityRef của LINQ to SQL)
-            // Lưu TenLoai vào field bổ sung thông qua ViewBag hoặc ViewModel riêng
+            
+            // Đọc trường MaSanCha
+            // Để tránh lỗi nếu câu SELECT không chứa MaSanCha (đề phòng trường hợp query ngoài map)
+            try
+            {
+                int ordinal = r.GetOrdinal("MaSanCha");
+                san.MaSanCha = r.IsDBNull(ordinal) ? (int?)null : r.GetInt32(ordinal);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                san.MaSanCha = null;
+            }
+
             return san;
         }
 

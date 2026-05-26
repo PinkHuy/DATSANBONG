@@ -116,20 +116,12 @@ namespace DATSANBONG.Controllers
                     ModelState.AddModelError("GioKetThucStr", "Giờ kết thúc phải lớn hơn giờ bắt đầu.");
                 }
 
-                // Kiểm tra xem khung giờ này có bị trùng lặp lịch với đơn đặt nào đã được duyệt hoặc đang chờ duyệt hay không
-                var existingBookings = _db.LayTatCaDatSan()
-                    .Where(d => d.MaSan == vm.MaSan && d.NgayDat.Date == vm.NgayDat.Date && d.TrangThai != "Đã hủy")
-                    .ToList();
-
-                bool isOverlapped = existingBookings.Any(b => {
-                    // Nếu giờ kết thúc trong DB là 23:59:59 và slot đó là 23:00 - 24:00, ta coi giờ kết thúc thực tế so sánh là 24:00
-                    TimeSpan bEndCompare = (b.GioKetThuc.Hours == 23 && b.GioKetThuc.Minutes == 59) ? new TimeSpan(24, 0, 0) : b.GioKetThuc;
-                    return b.GioBatDau < tEndForCompare && bEndCompare > tStart;
-                });
+                // Kiểm tra trùng lịch có xét phân cấp cụm sân (sân lớn - sân nhỏ)
+                bool isOverlapped = _db.KiemTraTrungLichPhanCap(vm.MaSan, vm.NgayDat, tStart, tEndForCompare);
 
                 if (isOverlapped)
                 {
-                    ModelState.AddModelError("", "Khung giờ bạn chọn đã bị trùng lịch với một người đặt khác. Vui lòng chọn khung giờ khác.");
+                    ModelState.AddModelError("", "Khung giờ bạn chọn đã bị trùng lịch với một người đặt khác (hoặc trùng với lịch của cụm sân liên quan). Vui lòng chọn khung giờ khác.");
                 }
 
                 if (ModelState.IsValid)
@@ -253,6 +245,119 @@ namespace DATSANBONG.Controllers
             }
 
             return RedirectToAction("LichSu");
+        }
+
+        // ============================================================
+        // GET: DatSan/GetEventsJson
+        // Lấy danh sách lịch đặt sân định dạng JSON cho FullCalendar
+        // ============================================================
+        [HttpGet]
+        public JsonResult GetEventsJson(int? maSan, string start, string end)
+        {
+            DateTime startDate;
+            DateTime endDate;
+
+            if (!DateTime.TryParse(start, out startDate)) startDate = DateTime.Today.AddDays(-7);
+            if (!DateTime.TryParse(end, out endDate)) endDate = DateTime.Today.AddDays(7);
+
+            var listSan = _db.LayDanhSachSanBong();
+            var bookings = _db.LayTatCaDatSan()
+                .Where(d => d.NgayDat >= startDate && d.NgayDat <= endDate && d.TrangThai != "Đã hủy");
+
+            if (maSan.HasValue)
+            {
+                // Tìm các sân liên quan (bản thân sân này, sân cha, sân con)
+                var relatedSanIds = new List<int> { maSan.Value };
+                var san = _db.LaySanBongTheoMa(maSan.Value);
+                if (san != null)
+                {
+                    if (san.MaSanCha.HasValue)
+                    {
+                        relatedSanIds.Add(san.MaSanCha.Value);
+                    }
+                    var sanConIds = listSan.Where(s => s.MaSanCha == maSan.Value).Select(s => s.MaSan).ToList();
+                    relatedSanIds.AddRange(sanConIds);
+                }
+
+                bookings = bookings.Where(d => d.MaSan.HasValue && relatedSanIds.Contains(d.MaSan.Value));
+            }
+
+            var events = bookings.Select(b => {
+                // Điều chỉnh giờ kết thúc 23:59:59 -> 24:00:00 cho FullCalendar hiển thị đẹp
+                string timeEndStr = b.GioKetThuc.ToString(@"hh\:mm\:ss");
+                if (b.GioKetThuc.Hours == 23 && b.GioKetThuc.Minutes == 59 && b.GioKetThuc.Seconds == 59)
+                {
+                    timeEndStr = "24:00:00";
+                }
+
+                var bSan = listSan.FirstOrDefault(s => s.MaSan == b.MaSan);
+                string tenSan = bSan?.TenSan ?? "Sân N/A";
+                bool isCurrentSan = maSan.HasValue && b.MaSan == maSan.Value;
+                string title = isCurrentSan ? (b.TrangThai == "Đã duyệt" ? "Đã đặt" : "Chờ duyệt") : $"Bận (trùng {tenSan})";
+                
+                // Chọn màu sắc: Đã duyệt (Xanh lá), Chờ duyệt (Cam), Sân khác trùng lịch (Đỏ/Xám)
+                string color = "#10b981"; // Đã duyệt (Xanh lá)
+                string border = "#047857";
+                if (b.TrangThai == "Chờ duyệt")
+                {
+                    color = "#f59e0b"; // Chờ duyệt (Vàng cam)
+                    border = "#d97706";
+                }
+                if (!isCurrentSan)
+                {
+                    color = "#ef4444"; // Trùng sân khác (Đỏ)
+                    border = "#b91c1c";
+                }
+
+                return new {
+                    id = b.MaDatSan,
+                    title = title,
+                    start = b.NgayDat.ToString("yyyy-MM-dd") + "T" + b.GioBatDau.ToString(@"hh\:mm\:ss"),
+                    end = b.NgayDat.ToString("yyyy-MM-dd") + "T" + timeEndStr,
+                    backgroundColor = color,
+                    borderColor = border,
+                    textColor = "#ffffff",
+                    extendedProps = new {
+                        tenSan = tenSan,
+                        trangThai = b.TrangThai,
+                        isCurrent = isCurrentSan
+                    }
+                };
+            }).ToList();
+
+            return Json(events, JsonRequestBehavior.AllowGet);
+        }
+
+        // ============================================================
+        // GET: DatSan/GetLichSanBong
+        // API lấy lịch đặt sân của một sân bóng cụ thể (VẤN ĐỀ 1)
+        // ============================================================
+        [HttpGet]
+        public JsonResult GetLichSanBong(int maSan)
+        {
+            // Dùng LINQ truy vấn bảng đơn đặt sân, lọc theo MaSan và trạng thái khác "Đã hủy"
+            var bookings = _db.LayTatCaDatSan()
+                .Where(d => d.MaSan == maSan && d.TrangThai != "Đã hủy");
+
+            // Ánh xạ dữ liệu sang cấu trúc JSON chuẩn của FullCalendar
+            var events = bookings.Select(b => {
+                // Điều chỉnh thời gian kết thúc 23:59:59 thành 24:00:00 để hiển thị mượt mà trên FullCalendar
+                string timeEndStr = b.GioKetThuc.ToString(@"hh\:mm\:ss");
+                if (b.GioKetThuc.Hours == 23 && b.GioKetThuc.Minutes == 59 && b.GioKetThuc.Seconds == 59)
+                {
+                    timeEndStr = "24:00:00";
+                }
+
+                return new {
+                    title = "Đã có người đặt", // Bảo mật tên khách hàng khác
+                    start = b.NgayDat.ToString("yyyy-MM-dd") + "T" + b.GioBatDau.ToString(@"hh\:mm\:ss"),
+                    end = b.NgayDat.ToString("yyyy-MM-dd") + "T" + timeEndStr,
+                    color = "#e74c3c", // Màu đỏ nhạt biểu thị khung giờ bị khóa
+                    textColor = "#ffffff"
+                };
+            }).ToList();
+
+            return Json(events, JsonRequestBehavior.AllowGet);
         }
     }
 }
