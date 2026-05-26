@@ -280,7 +280,7 @@
                             <i class="bi bi-grid"></i>Danh sách sân
                         </a>
                     </li>
-                    @if (Session["VaiTro"] != null && Session["VaiTro"].ToString() == "Admin")
+                    @if (Session["VaiTro"] != null && (Session["VaiTro"].ToString() == "Admin" || Session["VaiTro"].ToString() == "Chủ sân" || Session["VaiTro"].ToString() == "ChuSan" || Session["VaiTro"].ToString() == "Owner"))
                     {
                         <li class="nav-item">
                             <a class="nav-link" href="@Url.Action("Dashboard", "Admin")">
@@ -338,7 +338,7 @@
                                 </li>
 
 
-                                @if (Session["VaiTro"] != null && Session["VaiTro"].ToString() == "Admin")
+                                @if (Session["VaiTro"] != null && (Session["VaiTro"].ToString() == "Admin" || Session["VaiTro"].ToString() == "Chủ sân" || Session["VaiTro"].ToString() == "ChuSan" || Session["VaiTro"].ToString() == "Owner"))
                                 {
                                     <li>
                                         <a class="dropdown-item py-2" href="@Url.Action("Dashboard", "Admin")">
@@ -470,7 +470,7 @@
     </script>
 
     <script>
-    (function () {
+        (function () {
             var font = localStorage.getItem('dsb-font');
             if (font === 'courier') {
                 document.body.classList.add('font-courier');

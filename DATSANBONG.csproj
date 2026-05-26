@@ -513,6 +513,7 @@
     <Content Include="Views\SanBong\Detail.cshtml" />
     <Content Include="Views\DatSan\DatSan.cshtml" />
     <Content Include="Views\DatSan\LichSu.cshtml" />
+    <Content Include="Views\admin\QuanLyChuSan.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

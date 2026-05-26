@@ -146,9 +146,9 @@ namespace DATSANBONG.Data
             const string sql = "SELECT MaLoai, TenLoai, MoTa FROM LoaiSan ORDER BY MaLoai";
             return QueryList(sql, null, r => new LoaiSan
             {
-                MaLoai  = (int)r["MaLoai"],
+                MaLoai = (int)r["MaLoai"],
                 TenLoai = r["TenLoai"].ToString(),
-                MoTa    = r["MoTa"] == DBNull.Value ? null : r["MoTa"].ToString()
+                MoTa = r["MoTa"] == DBNull.Value ? null : r["MoTa"].ToString()
             });
         }
 
@@ -164,9 +164,9 @@ namespace DATSANBONG.Data
                 {
                     if (r.Read()) return new LoaiSan
                     {
-                        MaLoai  = (int)r["MaLoai"],
+                        MaLoai = (int)r["MaLoai"],
                         TenLoai = r["TenLoai"].ToString(),
-                        MoTa    = r["MoTa"] == DBNull.Value ? null : r["MoTa"].ToString()
+                        MoTa = r["MoTa"] == DBNull.Value ? null : r["MoTa"].ToString()
                     };
                 }
             }
@@ -222,11 +222,11 @@ namespace DATSANBONG.Data
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
-                cmd.Parameters.AddWithValue("@TenSan",     san.TenSan);
-                cmd.Parameters.AddWithValue("@MaLoai",     san.MaLoai);
+                cmd.Parameters.AddWithValue("@TenSan", san.TenSan);
+                cmd.Parameters.AddWithValue("@MaLoai", san.MaLoai);
                 cmd.Parameters.AddWithValue("@GiaTheoGio", san.GiaTheoGio);
-                cmd.Parameters.AddWithValue("@HinhAnh",    (object)san.HinhAnh ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@TrangThai",  san.TrangThai ?? "Hoạt động");
+                cmd.Parameters.AddWithValue("@HinhAnh", (object)san.HinhAnh ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@TrangThai", san.TrangThai ?? "Hoạt động");
                 conn.Open();
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
@@ -242,12 +242,12 @@ namespace DATSANBONG.Data
 
             ExecuteNonQuery(sql, cmd =>
             {
-                cmd.Parameters.AddWithValue("@MaSan",      san.MaSan);
-                cmd.Parameters.AddWithValue("@TenSan",     san.TenSan);
-                cmd.Parameters.AddWithValue("@MaLoai",     san.MaLoai);
+                cmd.Parameters.AddWithValue("@MaSan", san.MaSan);
+                cmd.Parameters.AddWithValue("@TenSan", san.TenSan);
+                cmd.Parameters.AddWithValue("@MaLoai", san.MaLoai);
                 cmd.Parameters.AddWithValue("@GiaTheoGio", san.GiaTheoGio);
-                cmd.Parameters.AddWithValue("@HinhAnh",    (object)san.HinhAnh ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@TrangThai",  san.TrangThai);
+                cmd.Parameters.AddWithValue("@HinhAnh", (object)san.HinhAnh ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@TrangThai", san.TrangThai);
             });
         }
 
@@ -271,14 +271,14 @@ namespace DATSANBONG.Data
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
-                cmd.Parameters.AddWithValue("@MaND",       ds.MaND);
-                cmd.Parameters.AddWithValue("@MaSan",      ds.MaSan);
-                cmd.Parameters.AddWithValue("@NgayDat",    ds.NgayDat);
-                cmd.Parameters.AddWithValue("@GioBatDau",  ds.GioBatDau);
+                cmd.Parameters.AddWithValue("@MaND", ds.MaND);
+                cmd.Parameters.AddWithValue("@MaSan", ds.MaSan);
+                cmd.Parameters.AddWithValue("@NgayDat", ds.NgayDat);
+                cmd.Parameters.AddWithValue("@GioBatDau", ds.GioBatDau);
                 cmd.Parameters.AddWithValue("@GioKetThuc", ds.GioKetThuc);
-                cmd.Parameters.AddWithValue("@TongTien",   ds.TongTien);
-                cmd.Parameters.AddWithValue("@GhiChu",     (object)ds.GhiChu ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@TrangThai",  ds.TrangThai ?? "Chờ duyệt");
+                cmd.Parameters.AddWithValue("@TongTien", ds.TongTien);
+                cmd.Parameters.AddWithValue("@GhiChu", (object)ds.GhiChu ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@TrangThai", ds.TrangThai ?? "Chờ duyệt");
                 conn.Open();
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
@@ -321,7 +321,7 @@ namespace DATSANBONG.Data
                 var ds = MapDatSan(r);
                 ds.NguoiDung = new NguoiDung
                 {
-                    HoTen    = r["HoTen"].ToString(),
+                    HoTen = r["HoTen"].ToString(),
                     TaiKhoan = r["TaiKhoan"].ToString()
                 };
                 return ds;
@@ -359,8 +359,8 @@ namespace DATSANBONG.Data
             const string sql = "UPDATE DatSan SET TrangThai = @TrangThai WHERE MaDatSan = @MaDatSan";
             ExecuteNonQuery(sql, cmd =>
             {
-                cmd.Parameters.AddWithValue("@TrangThai",  trangThai);
-                cmd.Parameters.AddWithValue("@MaDatSan",   maDatSan);
+                cmd.Parameters.AddWithValue("@TrangThai", trangThai);
+                cmd.Parameters.AddWithValue("@MaDatSan", maDatSan);
             });
         }
 
@@ -380,7 +380,7 @@ namespace DATSANBONG.Data
                 cmd =>
                 {
                     cmd.Parameters.AddWithValue("@Thang", thang);
-                    cmd.Parameters.AddWithValue("@Nam",   nam);
+                    cmd.Parameters.AddWithValue("@Nam", nam);
                 });
 
         public decimal TinhDoanhThuThang(int thang, int nam) =>
@@ -389,8 +389,84 @@ namespace DATSANBONG.Data
                 cmd =>
                 {
                     cmd.Parameters.AddWithValue("@Thang", thang);
-                    cmd.Parameters.AddWithValue("@Nam",   nam);
+                    cmd.Parameters.AddWithValue("@Nam", nam);
                 }) ?? 0m);
+
+        // ─────────────────────────────────────────────────────────────
+        //  CHỦ SÂN
+        // ─────────────────────────────────────────────────────────────
+
+        /// <summary>Lấy danh sách người dùng theo VaiTro (vd: "Chủ sân", "Khách hàng")</summary>
+        public List<NguoiDung> LayDanhSachNguoiDungTheoVaiTro(string vaiTro)
+        {
+            const string sql = @"
+                SELECT MaND, HoTen, TaiKhoan, MatKhau, SoDienThoai, VaiTro
+                FROM   NguoiDung
+                WHERE  VaiTro = @VaiTro
+                ORDER  BY MaND";
+
+            return QueryList(sql,
+                cmd => cmd.Parameters.AddWithValue("@VaiTro", vaiTro),
+                MapNguoiDung);
+        }
+
+        /// <summary>Cập nhật VaiTro của một người dùng</summary>
+        public void CapNhatVaiTro(int maND, string vaiTro)
+        {
+            const string sql = "UPDATE NguoiDung SET VaiTro = @VaiTro WHERE MaND = @MaND";
+            ExecuteNonQuery(sql, cmd =>
+            {
+                cmd.Parameters.AddWithValue("@VaiTro", vaiTro);
+                cmd.Parameters.AddWithValue("@MaND", maND);
+            });
+        }
+
+        /// <summary>Gán MaChuSan cho sân bóng (phân công chủ sân quản lý sân)</summary>
+        public void PhanCongSanChoChuSan(int maND, int maSan)
+        {
+            const string sql = "UPDATE SanBong SET MaChuSan = @MaND WHERE MaSan = @MaSan";
+            ExecuteNonQuery(sql, cmd =>
+            {
+                cmd.Parameters.AddWithValue("@MaND", maND);
+                cmd.Parameters.AddWithValue("@MaSan", maSan);
+            });
+        }
+
+        /// <summary>Gỡ chủ sân khỏi tất cả sân đang phân công</summary>
+        public void GoChuSanKhoiTatCaSan(int maND)
+        {
+            const string sql = "UPDATE SanBong SET MaChuSan = NULL WHERE MaChuSan = @MaND";
+            ExecuteNonQuery(sql, cmd => cmd.Parameters.AddWithValue("@MaND", maND));
+        }
+
+        /// <summary>Lấy map MaND → danh sách TenSan đang phân công cho chủ sân</summary>
+        public Dictionary<int, List<string>> LaySanCuaTungChuSan()
+        {
+            const string sql = @"
+                SELECT MaChuSan, TenSan
+                FROM   SanBong
+                WHERE  MaChuSan IS NOT NULL
+                ORDER  BY MaChuSan, TenSan";
+
+            var result = new Dictionary<int, List<string>>();
+            using (var conn = GetConnection())
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                conn.Open();
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        int maND = (int)r["MaChuSan"];
+                        string ten = r["TenSan"].ToString();
+                        if (!result.ContainsKey(maND))
+                            result[maND] = new List<string>();
+                        result[maND].Add(ten);
+                    }
+                }
+            }
+            return result;
+        }
 
         // ─────────────────────────────────────────────────────────────
         //  PRIVATE HELPERS
@@ -439,24 +515,24 @@ namespace DATSANBONG.Data
         private static NguoiDung MapNguoiDung(SqlDataReader r)
         {
             var nd = new NguoiDung();
-            nd.MaND        = (int)r["MaND"];
-            nd.HoTen       = r["HoTen"].ToString();
-            nd.TaiKhoan    = r["TaiKhoan"].ToString();
-            nd.MatKhau     = r["MatKhau"].ToString();
+            nd.MaND = (int)r["MaND"];
+            nd.HoTen = r["HoTen"].ToString();
+            nd.TaiKhoan = r["TaiKhoan"].ToString();
+            nd.MatKhau = r["MatKhau"].ToString();
             nd.SoDienThoai = r["SoDienThoai"] == DBNull.Value ? null : r["SoDienThoai"].ToString();
-            nd.VaiTro      = r["VaiTro"] == DBNull.Value ? "Khách hàng" : r["VaiTro"].ToString();
+            nd.VaiTro = r["VaiTro"] == DBNull.Value ? "Khách hàng" : r["VaiTro"].ToString();
             return nd;
         }
 
         private static SanBong MapSanBong(SqlDataReader r)
         {
             var san = new SanBong();
-            san.MaSan      = (int)r["MaSan"];
-            san.TenSan     = r["TenSan"].ToString();
-            san.MaLoai     = (int?)r["MaLoai"];
+            san.MaSan = (int)r["MaSan"];
+            san.TenSan = r["TenSan"].ToString();
+            san.MaLoai = (int?)r["MaLoai"];
             san.GiaTheoGio = (decimal)r["GiaTheoGio"];
-            san.HinhAnh    = r["HinhAnh"] == DBNull.Value ? null : r["HinhAnh"].ToString();
-            san.TrangThai  = r["TrangThai"] == DBNull.Value ? "Hoạt động" : r["TrangThai"].ToString();
+            san.HinhAnh = r["HinhAnh"] == DBNull.Value ? null : r["HinhAnh"].ToString();
+            san.TrangThai = r["TrangThai"] == DBNull.Value ? "Hoạt động" : r["TrangThai"].ToString();
             // Gán LoaiSan tạm (không dùng EntityRef của LINQ to SQL)
             // Lưu TenLoai vào field bổ sung thông qua ViewBag hoặc ViewModel riêng
             return san;
@@ -465,15 +541,15 @@ namespace DATSANBONG.Data
         private static DatSan MapDatSan(SqlDataReader r)
         {
             var ds = new DatSan();
-            ds.MaDatSan   = (int)r["MaDatSan"];
-            ds.MaND       = (int?)r["MaND"];
-            ds.MaSan      = (int?)r["MaSan"];
-            ds.NgayDat    = (DateTime)r["NgayDat"];
-            ds.GioBatDau  = (TimeSpan)r["GioBatDau"];
+            ds.MaDatSan = (int)r["MaDatSan"];
+            ds.MaND = (int?)r["MaND"];
+            ds.MaSan = (int?)r["MaSan"];
+            ds.NgayDat = (DateTime)r["NgayDat"];
+            ds.GioBatDau = (TimeSpan)r["GioBatDau"];
             ds.GioKetThuc = (TimeSpan)r["GioKetThuc"];
-            ds.TongTien   = r["TongTien"] == DBNull.Value ? (decimal?)null : (decimal)r["TongTien"];
-            ds.GhiChu     = r["GhiChu"] == DBNull.Value ? null : r["GhiChu"].ToString();
-            ds.TrangThai  = r["TrangThai"] == DBNull.Value ? "Chờ duyệt" : r["TrangThai"].ToString();
+            ds.TongTien = r["TongTien"] == DBNull.Value ? (decimal?)null : (decimal)r["TongTien"];
+            ds.GhiChu = r["GhiChu"] == DBNull.Value ? null : r["GhiChu"].ToString();
+            ds.TrangThai = r["TrangThai"] == DBNull.Value ? "Chờ duyệt" : r["TrangThai"].ToString();
             return ds;
         }
     }

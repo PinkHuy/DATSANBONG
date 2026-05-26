@@ -1,10 +1,10 @@
 @{
     ViewBag.Title = "Dashboard - Tổng quan";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    
+
     bool isAdmin = Session["VaiTro"] != null && Session["VaiTro"].ToString() == "Admin";
     string cardColClass = isAdmin ? "col-12 col-sm-6 col-xl-3" : "col-12 col-sm-6 col-xl-4";
-    string linkColClass = isAdmin ? "col-12 col-md-4" : "col-12 col-md-6";
+    string linkColClass = isAdmin ? "col-12 col-md-3" : "col-12 col-md-6";
 }
 
 <!-- Page Header in Admindek Style -->
@@ -60,6 +60,24 @@
                 </a>
             </div>
         </div>
+
+        <!-- Card: Tổng Chủ Sân (Chỉ Admin) -->
+        <div class="@cardColClass">
+            <div class="card border-0 shadow-sm h-100 text-white" style="background:#f59e0b;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="fw-bold mb-1">@(ViewBag.TongChuSan ?? 0)</h2>
+                        <p class="mb-0 small fw-semibold text-uppercase" style="color:rgba(255,255,255,.7);">Chủ Sân</p>
+                    </div>
+                    <div class="fs-1" style="color:rgba(255,255,255,.4);">
+                        <i class="bi bi-building-fill"></i>
+                    </div>
+                </div>
+                <a href="@Url.Action("QuanLyChuSan", "Admin")" class="card-footer bg-dark bg-opacity-10 border-0 py-2 text-center text-white text-decoration-none small">
+                    Chi tiết chủ sân <i class="bi bi-arrow-right-circle ms-1"></i>
+                </a>
+            </div>
+        </div>
     }
 
     <!-- Card: Tổng Đơn Đặt -->
@@ -111,7 +129,7 @@
                     Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
-            
+
             <div class="card-block p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -212,6 +230,19 @@
                     <h6 class="fw-bold mb-2">Quản lý Khách Hàng</h6>
                     <p class="text-muted small mb-3">Quản lý danh sách tài khoản khách hàng, thông tin liên lạc và quyền truy cập.</p>
                     <a href="@Url.Action("QuanLyKhachHang", "Admin")" class="btn btn-outline-primary btn-sm w-100">Xem ngay</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 @linkColClass">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="fs-2 mb-2" style="color:#f59e0b;">
+                        <i class="bi bi-building-fill"></i>
+                    </div>
+                    <h6 class="fw-bold mb-2">Quản lý Chủ Sân</h6>
+                    <p class="text-muted small mb-3">Thêm mới, phân công sân bóng và quản lý tài khoản chủ sân trong hệ thống.</p>
+                    <a href="@Url.Action("QuanLyChuSan", "Admin")" class="btn btn-sm w-100 text-white fw-semibold" style="background:#f59e0b;">Xem ngay</a>
                 </div>
             </div>
         </div>

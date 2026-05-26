@@ -1,0 +1,245 @@
+﻿@model List<DATSANBONG.Models.NguoiDung>
+
+@{
+    ViewBag.Title = "Quản lý chủ sân";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-header-blue d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="mb-0 fw-bold">Quản lý chủ sân</h4>
+        <p class="text-muted mb-0 small">Danh sách tài khoản chủ sân trong hệ thống.</p>
+    </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="@Url.Action("Dashboard","Admin")">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Chủ sân</li>
+        </ol>
+    </nav>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Form thêm chủ sân mới -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold text-dark">
+            <i class="bi bi-person-plus-fill text-success me-2"></i>Thêm chủ sân mới
+        </h5>
+    </div>
+    <div class="card-body">
+        @using (Html.BeginForm("ThemChuSan", "Admin", FormMethod.Post, new { @class = "row g-3" }))
+        {
+            @Html.AntiForgeryToken()
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Họ tên <span class="text-danger">*</span></label>
+                <input type="text" name="HoTen" class="form-control" placeholder="Nguyễn Văn A" required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Tài khoản <span class="text-danger">*</span></label>
+                <input type="text" name="TaiKhoan" class="form-control" placeholder="chusanA" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Mật khẩu <span class="text-danger">*</span></label>
+                <input type="password" name="MatKhau" class="form-control" placeholder="••••••••" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Số điện thoại</label>
+                <input type="text" name="SoDienThoai" class="form-control" placeholder="0909xxxxxx" />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100 fw-semibold">
+                    <i class="bi bi-plus-circle me-1"></i>Thêm chủ sân
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Danh sách chủ sân -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+        <h5 class="mb-0 fw-bold text-dark">
+            <i class="bi bi-building-fill text-warning me-2"></i>
+            Danh sách chủ sân
+            <span class="badge bg-warning text-dark ms-2">@(Model != null ? Model.Count : 0)</span>
+        </h5>
+    </div>
+    <div class="card-block p-0">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-building fs-1 text-warning mb-3 d-block"></i>
+                <h5 class="fw-bold">Chưa có chủ sân nào</h5>
+                <p class="small mb-0">Hãy thêm chủ sân đầu tiên bằng form phía trên.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width:60px;">STT</th>
+                            <th>Họ tên</th>
+                            <th>Tài khoản</th>
+                            <th>Số điện thoại</th>
+                            <th>Vai trò</th>
+                            <th>Sân được quản lý</th>
+                            <th class="text-center pe-4" style="width:220px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int stt = 1;
+                            var sanMap = ViewBag.SanCuaChuSan as Dictionary<int, List<string>>;
+                        }
+                        @foreach (var item in Model)
+                        {
+                            var sanList = (sanMap != null && sanMap.ContainsKey(item.MaND))
+                                          ? sanMap[item.MaND]
+                                          : new List<string>();
+                            <tr>
+                                <td class="ps-4 fw-bold text-muted">#@stt</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center"
+                                             style="width:36px;height:36px;min-width:36px;">
+                                            <i class="bi bi-person-fill text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@item.HoTen</div>
+                                            <div class="text-muted small">ID: @item.MaND</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border fw-semibold px-2 py-1">
+                                        @item.TaiKhoan
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.SoDienThoai))
+                                    {
+                                        <span><i class="bi bi-telephone text-muted me-1"></i>@item.SoDienThoai</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small fst-italic">Chưa cung cấp</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge fw-semibold px-2 py-1"
+                                          style="background:rgba(245,158,11,.15);color:#b45309;border:1px solid rgba(245,158,11,.3);">
+                                        <i class="bi bi-star-fill me-1" style="font-size:10px;"></i>@item.VaiTro
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (sanList.Any())
+                                    {
+                                        foreach (var ten in sanList)
+                                        {
+                                            <span class="badge fw-normal me-1 mb-1 px-2 py-1"
+                                                  style="background:rgba(59,130,246,.1);color:#1d4ed8;border:1px solid rgba(59,130,246,.25);">
+                                                <i class="bi bi-geo-alt-fill me-1" style="font-size:10px;"></i>@ten
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small fst-italic">Chưa có sân</span>
+                                    }
+                                </td>
+                                <td class="text-center pe-4">
+                                    <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                        <button type="button"
+                                                class="btn btn-outline-primary btn-sm fw-semibold"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalPhanCong"
+                                                data-mand="@item.MaND"
+                                                data-hoten="@item.HoTen">
+                                            <i class="bi bi-building-add me-1"></i>Phân công
+                                        </button>
+                                        <a href="@Url.Action("DoiVaiTro","Admin", new { id = item.MaND, vaiTro = "Khách hàng" })"
+                                           class="btn btn-outline-secondary btn-sm fw-semibold"
+                                           onclick="return confirm('Thu hồi quyền Chủ sân của @Html.Raw(item.HoTen)?');">
+                                            <i class="bi bi-arrow-down-circle me-1"></i>Thu hồi
+                                        </a>
+                                        <a href="@Url.Action("XoaChuSan","Admin", new { id = item.MaND })"
+                                           class="btn btn-outline-danger btn-sm fw-semibold"
+                                           onclick="return confirm('Xóa chủ sân @Html.Raw(item.HoTen)? Không thể hoàn tác!');">
+                                            <i class="bi bi-trash me-1"></i>Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            stt++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal phân công sân -->
+<div class="modal fade" id="modalPhanCong" tabindex="-1" aria-labelledby="lblModalPhanCong" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="lblModalPhanCong">
+                    <i class="bi bi-building-add text-primary me-2"></i>Phân công sân cho chủ sân
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            @using (Html.BeginForm("PhanCongSan", "Admin", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="MaND" id="hiddenMaND" />
+                    <p class="text-muted mb-3">
+                        Phân công sân cho: <strong id="labelHoTen" class="text-dark"></strong>
+                    </p>
+                    <label class="form-label fw-semibold">Chọn sân bóng <span class="text-danger">*</span></label>
+                    <select name="MaSan" class="form-select" required>
+                        <option value="">-- Chọn sân bóng --</option>
+                        @if (ViewBag.DanhSachSan != null)
+                        {
+                            foreach (var san in (List<DATSANBONG.Models.SanBong>)ViewBag.DanhSachSan)
+                            {
+                                <option value="@san.MaSan">@san.TenSan</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-semibold">
+                        <i class="bi bi-check-circle me-1"></i>Xác nhận
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>document.getElementById('modalPhanCong').addEventListener('show.bs.modal', function (e) {
+            var btn = e.relatedTarget;
+            document.getElementById('hiddenMaND').value   = btn.getAttribute('data-mand');
+            document.getElementById('labelHoTen').textContent = btn.getAttribute('data-hoten');
+        });</script>
+}

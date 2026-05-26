@@ -22,240 +22,182 @@ namespace DATSANBONG.Controllers
             string role = Session["VaiTro"]?.ToString();
             int? currentUserId = Session["MaND"] != null ? (int?)Convert.ToInt32(Session["MaND"]) : null;
 
-            bool isOwner = (role == "Owner" || role == "ChuSan");
+            bool isOwner = (role == "Owner" || role == "ChuSan" || role == "Chủ sân");
 
             if (isOwner && currentUserId.HasValue)
             {
-                // ── 1. Tổng số sân bóng thuộc sở hữu của Chủ sân này ──
                 ViewBag.TongSan = db.SanBongs.Count(s => s.MaChuSan == currentUserId.Value);
 
-                // ── 2. Tổng số khách hàng đã từng đặt sân của Chủ sân này ──
                 ViewBag.TongKhach = db.DatSans
                     .Where(d => d.SanBong.MaChuSan == currentUserId.Value && d.MaND != null)
                     .Select(d => d.MaND)
                     .Distinct()
                     .Count();
 
-                // ── 3. Tổng số đơn đặt sân thuộc các sân của Chủ sân này ──
                 ViewBag.TongDon = db.DatSans.Count(d => d.SanBong.MaChuSan == currentUserId.Value);
 
-                // ── 4. Tổng doanh thu của các sân thuộc Chủ sân này ──
                 try
                 {
                     ViewBag.DoanhThu = db.DatSans
                         .Where(d => d.SanBong.MaChuSan == currentUserId.Value && d.TrangThai == "Đã duyệt")
                         .Sum(d => d.TongTien) ?? 0;
                 }
-                catch
-                {
-                    ViewBag.DoanhThu = 0;
-                }
+                catch { ViewBag.DoanhThu = 0; }
 
-                // ── 5. Lấy 5 đơn đặt sân mới nhất thuộc quyền sở hữu ──
-                var donMoiNhat = db.DatSans
+                ViewBag.DonMoiNhat = db.DatSans
                     .Where(d => d.SanBong.MaChuSan == currentUserId.Value)
                     .OrderByDescending(d => d.NgayDat)
                     .Take(5)
                     .ToList();
-
-                ViewBag.DonMoiNhat = donMoiNhat;
             }
             else
             {
-                // ── 1. Tổng số sân bóng toàn hệ thống ──
                 ViewBag.TongSan = db.SanBongs.Count();
-
-                // ── 2. Tổng số khách hàng toàn hệ thống ──
                 ViewBag.TongKhach = db.NguoiDungs.Count(u => u.VaiTro != "Admin");
-
-                // ── 3. Tổng số đơn đặt sân toàn hệ thống ──
                 ViewBag.TongDon = db.DatSans.Count();
 
-                // ── 4. Tổng doanh thu toàn hệ thống ──
-                try
-                {
-                    ViewBag.DoanhThu = db.DatSans.Sum(d => d.TongTien) ?? 0;
-                }
-                catch
-                {
-                    ViewBag.DoanhThu = 0;
-                }
+                try { ViewBag.DoanhThu = db.DatSans.Sum(d => d.TongTien) ?? 0; }
+                catch { ViewBag.DoanhThu = 0; }
 
-                // ── 5. Lấy 5 đơn đặt sân mới nhất toàn hệ thống ──
-                var donMoiNhat = db.DatSans
+                ViewBag.DonMoiNhat = db.DatSans
                     .OrderByDescending(d => d.NgayDat)
                     .Take(5)
                     .ToList();
 
-                ViewBag.DonMoiNhat = donMoiNhat;
+                // Tổng chủ sân (chỉ hiển thị khi là Admin)
+                ViewBag.TongChuSan = _dbSB.LayDanhSachNguoiDungTheoVaiTro("Chủ sân").Count;
             }
 
             return View();
         }
 
-        // GET: Admin
+        // ============================================================
+        // GET: Admin/Index
         // Hiển thị danh sách sân bóng
+        // ============================================================
         public ActionResult Index()
         {
             string role = Session["VaiTro"]?.ToString();
             int? currentUserId = Session["MaND"] != null ? (int?)Convert.ToInt32(Session["MaND"]) : null;
 
             List<SanBong> sanbongs;
-            if ((role == "Owner" || role == "ChuSan") && currentUserId.HasValue)
-            {
+            if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") && currentUserId.HasValue)
                 sanbongs = db.SanBongs.Where(s => s.MaChuSan == currentUserId.Value).ToList();
-            }
             else
-            {
                 sanbongs = db.SanBongs.ToList();
-            }
 
             return View(sanbongs);
         }
 
+        // ============================================================
         // GET: Admin/Create
-        // Trả về form thêm mới
+        // ============================================================
         public ActionResult Create()
         {
             string role = Session["VaiTro"]?.ToString();
-            // Truyền danh sách loại sân sang View để làm DropdownList
             ViewBag.MaLoai = new SelectList(db.LoaiSans.ToList(), "MaLoai", "TenLoai");
 
-            // Nếu là Admin, truyền thêm danh sách chủ sân
             if (role == "Admin")
             {
-                var owners = db.NguoiDungs.Where(u => u.VaiTro == "Owner" || u.VaiTro == "ChuSan").ToList();
+                var owners = db.NguoiDungs.Where(u => u.VaiTro == "Owner" || u.VaiTro == "ChuSan" || u.VaiTro == "Chủ sân").ToList();
                 ViewBag.MaChuSan = new SelectList(owners, "MaND", "HoTen");
             }
             return View();
         }
 
+        // ============================================================
         // POST: Admin/Create
-        // Xử lý dữ liệu thêm mới từ form
+        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(SanBong sanBong, HttpPostedFileBase fileAnh)
         {
             string role = Session["VaiTro"]?.ToString();
-            // Kiểm tra validation của form
             if (ModelState.IsValid)
             {
-                // Xử lý upload file ảnh
                 if (fileAnh != null && fileAnh.ContentLength > 0)
                 {
-                    // Lấy tên file
                     var fileName = Path.GetFileName(fileAnh.FileName);
-                    // Đường dẫn thư mục lưu file
                     var folderPath = Server.MapPath("~/Content/Images/SanBong");
-                    if (!Directory.Exists(folderPath))
-                    {
-                        Directory.CreateDirectory(folderPath);
-                    }
-                    // Đường dẫn lưu file
-                    var path = Path.Combine(folderPath, fileName);
-                    // Lưu file vào server
-                    fileAnh.SaveAs(path);
-                    // Lưu tên file vào database
+                    if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+                    fileAnh.SaveAs(Path.Combine(folderPath, fileName));
                     sanBong.HinhAnh = fileName;
                 }
 
-                // Gán chủ sân bóng
-                if (role == "Owner" || role == "ChuSan")
-                {
+                if (role == "Owner" || role == "ChuSan" || role == "Chủ sân")
                     sanBong.MaChuSan = Convert.ToInt32(Session["MaND"]);
-                }
 
-                // Thêm sân bóng vào DB
                 db.SanBongs.InsertOnSubmit(sanBong);
                 db.SubmitChanges();
                 return RedirectToAction("Index");
             }
 
-            // Nếu form không hợp lệ, tải lại danh sách loại sân
             ViewBag.MaLoai = new SelectList(db.LoaiSans.ToList(), "MaLoai", "TenLoai", sanBong.MaLoai);
             if (role == "Admin")
             {
-                var owners = db.NguoiDungs.Where(u => u.VaiTro == "Owner" || u.VaiTro == "ChuSan").ToList();
+                var owners = db.NguoiDungs.Where(u => u.VaiTro == "Owner" || u.VaiTro == "ChuSan" || u.VaiTro == "Chủ sân").ToList();
                 ViewBag.MaChuSan = new SelectList(owners, "MaND", "HoTen", sanBong.MaChuSan);
             }
             return View(sanBong);
         }
 
+        // ============================================================
         // GET: Admin/Edit/5
-        // Lấy dữ liệu của 1 sân bóng để hiển thị lên form chỉnh sửa
+        // ============================================================
         public ActionResult Edit(int id)
         {
             var sanBong = db.SanBongs.SingleOrDefault(s => s.MaSan == id);
-            if (sanBong == null)
-            {
-                return HttpNotFound();
-            }
+            if (sanBong == null) return HttpNotFound();
 
             string role = Session["VaiTro"]?.ToString();
-            // Kiểm soát bảo mật: không được sửa sân của chủ khác
-            if ((role == "Owner" || role == "ChuSan") && sanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
+            if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") && sanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
             {
                 TempData["LoiThongBao"] = "Bạn không có quyền chỉnh sửa sân bóng này.";
                 return RedirectToAction("Index");
             }
 
-            // Truyền danh sách loại sân và chọn sẵn loại hiện tại
             ViewBag.MaLoai = new SelectList(db.LoaiSans.ToList(), "MaLoai", "TenLoai", sanBong.MaLoai);
-
-            // Nếu là Admin, truyền danh sách chủ sân để đổi nếu cần
             if (role == "Admin")
             {
-                var owners = db.NguoiDungs.Where(u => u.VaiTro == "Owner" || u.VaiTro == "ChuSan").ToList();
+                var owners = db.NguoiDungs.Where(u => u.VaiTro == "Owner" || u.VaiTro == "ChuSan" || u.VaiTro == "Chủ sân").ToList();
                 ViewBag.MaChuSan = new SelectList(owners, "MaND", "HoTen", sanBong.MaChuSan);
             }
-
             return View(sanBong);
         }
 
+        // ============================================================
         // POST: Admin/Edit/5
-        // Xử lý lưu thay đổi
+        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(SanBong sanBongEdit, HttpPostedFileBase fileAnh)
         {
             string role = Session["VaiTro"]?.ToString();
-
             if (ModelState.IsValid)
             {
-                // Tìm sân bóng trong cơ sở dữ liệu
                 var sanBongDB = db.SanBongs.SingleOrDefault(s => s.MaSan == sanBongEdit.MaSan);
                 if (sanBongDB != null)
                 {
-                    // Kiểm soát bảo mật
-                    if ((role == "Owner" || role == "ChuSan") && sanBongDB.MaChuSan != Convert.ToInt32(Session["MaND"]))
+                    if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") && sanBongDB.MaChuSan != Convert.ToInt32(Session["MaND"]))
                     {
                         TempData["LoiThongBao"] = "Bạn không có quyền chỉnh sửa sân bóng này.";
                         return RedirectToAction("Index");
                     }
 
-                    // Cập nhật các trường thông tin
                     sanBongDB.TenSan = sanBongEdit.TenSan;
                     sanBongDB.MaLoai = sanBongEdit.MaLoai;
                     sanBongDB.GiaTheoGio = sanBongEdit.GiaTheoGio;
                     sanBongDB.TrangThai = sanBongEdit.TrangThai;
 
-                    // Nếu là Admin, cho phép chuyển đổi chủ sở hữu
                     if (role == "Admin")
-                    {
                         sanBongDB.MaChuSan = sanBongEdit.MaChuSan;
-                    }
 
-                    // Nếu có upload ảnh mới thì thay thế
                     if (fileAnh != null && fileAnh.ContentLength > 0)
                     {
                         var fileName = Path.GetFileName(fileAnh.FileName);
                         var folderPath = Server.MapPath("~/Content/Images/SanBong");
-                        if (!Directory.Exists(folderPath))
-                        {
-                            Directory.CreateDirectory(folderPath);
-                        }
-                        var path = Path.Combine(folderPath, fileName);
-                        fileAnh.SaveAs(path);
+                        if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+                        fileAnh.SaveAs(Path.Combine(folderPath, fileName));
                         sanBongDB.HinhAnh = fileName;
                     }
 
@@ -263,30 +205,30 @@ namespace DATSANBONG.Controllers
                     return RedirectToAction("Index");
                 }
             }
+
             ViewBag.MaLoai = new SelectList(db.LoaiSans.ToList(), "MaLoai", "TenLoai", sanBongEdit.MaLoai);
             if (role == "Admin")
             {
-                var owners = db.NguoiDungs.Where(u => u.VaiTro == "Owner" || u.VaiTro == "ChuSan").ToList();
+                var owners = db.NguoiDungs.Where(u => u.VaiTro == "Owner" || u.VaiTro == "ChuSan" || u.VaiTro == "Chủ sân").ToList();
                 ViewBag.MaChuSan = new SelectList(owners, "MaND", "HoTen", sanBongEdit.MaChuSan);
             }
             return View(sanBongEdit);
         }
 
+        // ============================================================
         // GET: Admin/Delete/5
-        // Xóa sân bóng dựa vào id
+        // ============================================================
         public ActionResult Delete(int id)
         {
             var sanBong = db.SanBongs.SingleOrDefault(s => s.MaSan == id);
             if (sanBong != null)
             {
                 string role = Session["VaiTro"]?.ToString();
-                // Kiểm soát bảo mật
-                if ((role == "Owner" || role == "ChuSan") && sanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
+                if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") && sanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
                 {
                     TempData["LoiThongBao"] = "Bạn không có quyền xóa sân bóng này.";
                     return RedirectToAction("Index");
                 }
-
                 db.SanBongs.DeleteOnSubmit(sanBong);
                 db.SubmitChanges();
             }
@@ -295,35 +237,114 @@ namespace DATSANBONG.Controllers
 
         // ============================================================
         // GET: Admin/QuanLyDatSan
-        // Quản lý tất cả đơn đặt sân của khách hàng
+        // Admin xem tất cả — Chủ sân chỉ thấy sân của mình
         // ============================================================
-        public ActionResult QuanLyDatSan(string trangThai)
+        public ActionResult QuanLyDatSan(string trangThai = "Chờ duyệt")
         {
-            var query = db.DatSans.AsQueryable();
-
             string role = Session["VaiTro"]?.ToString();
-            int? currentUserId = Session["MaND"] != null ? (int?)Convert.ToInt32(Session["MaND"]) : null;
+            int? currentUserId = Session["MaND"] != null
+                ? (int?)Convert.ToInt32(Session["MaND"]) : null;
+            bool isChuSan = (role == "Owner" || role == "ChuSan" || role == "Chủ sân");
 
-            // Nếu là Chủ sân, chỉ hiện đơn hàng của các sân thuộc về họ
-            if ((role == "Owner" || role == "ChuSan") && currentUserId.HasValue)
-            {
+            IQueryable<DatSan> query = db.DatSans;
+
+            // Chủ sân chỉ thấy đơn của sân mình quản lý
+            if (isChuSan && currentUserId.HasValue)
                 query = query.Where(d => d.SanBong.MaChuSan == currentUserId.Value);
-            }
 
-            if (!string.IsNullOrEmpty(trangThai))
-            {
+            // Lọc theo trạng thái (mặc định "Chờ duyệt", "Tất cả" thì không lọc)
+            if (trangThai != "Tất cả")
                 query = query.Where(d => d.TrangThai == trangThai);
-            }
 
-            var listDatSan = query.OrderByDescending(d => d.NgayDat).ToList();
+            // Đếm badge cho tab "Chờ duyệt"
+            IQueryable<DatSan> choDuyetQuery = db.DatSans.Where(d => d.TrangThai == "Chờ duyệt");
+            if (isChuSan && currentUserId.HasValue)
+                choDuyetQuery = choDuyetQuery.Where(d => d.SanBong.MaChuSan == currentUserId.Value);
+
+            ViewBag.SoChoDuyet = choDuyetQuery.Count();
+            ViewBag.TrangThaiFilter = trangThai;
             ViewBag.TrangThaiChon = trangThai;
 
-            return View(listDatSan);
+            return View(query.OrderByDescending(d => d.NgayDat).ToList());
         }
 
         // ============================================================
-        // GET: Admin/DuyetDon/5
-        // Phê duyệt yêu cầu đặt sân
+        // POST: Admin/DuyetDatSan
+        // ============================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult DuyetDatSan(int maDatSan)
+        {
+            string role = Session["VaiTro"]?.ToString();
+            int? currentUserId = Session["MaND"] != null
+                ? (int?)Convert.ToInt32(Session["MaND"]) : null;
+
+            var datSan = db.DatSans.FirstOrDefault(d => d.MaDatSan == maDatSan);
+            if (datSan == null)
+            {
+                TempData["LoiThongBao"] = "Không tìm thấy đơn đặt sân!";
+                return RedirectToAction("QuanLyDatSan");
+            }
+
+            // Bảo mật: chủ sân chỉ duyệt được sân của mình
+            bool isChuSan = (role == "ChuSan" || role == "Owner" || role == "Chủ sân");
+            if (isChuSan && currentUserId.HasValue)
+            {
+                var san = db.SanBongs.FirstOrDefault(s =>
+                    s.MaSan == datSan.MaSan && s.MaChuSan == currentUserId.Value);
+                if (san == null)
+                {
+                    TempData["LoiThongBao"] = "Bạn không có quyền duyệt đơn này!";
+                    return RedirectToAction("QuanLyDatSan");
+                }
+            }
+
+            datSan.TrangThai = "Đã duyệt";
+            db.SubmitChanges();
+
+            TempData["ThanhCong"] = "Đã duyệt đơn đặt sân thành công!";
+            return RedirectToAction("QuanLyDatSan");
+        }
+
+        // ============================================================
+        // POST: Admin/TuChoiDatSan
+        // ============================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult TuChoiDatSan(int maDatSan)
+        {
+            string role = Session["VaiTro"]?.ToString();
+            int? currentUserId = Session["MaND"] != null
+                ? (int?)Convert.ToInt32(Session["MaND"]) : null;
+
+            var datSan = db.DatSans.FirstOrDefault(d => d.MaDatSan == maDatSan);
+            if (datSan == null)
+            {
+                TempData["LoiThongBao"] = "Không tìm thấy đơn đặt sân!";
+                return RedirectToAction("QuanLyDatSan");
+            }
+
+            bool isChuSan = (role == "ChuSan" || role == "Owner" || role == "Chủ sân");
+            if (isChuSan && currentUserId.HasValue)
+            {
+                var san = db.SanBongs.FirstOrDefault(s =>
+                    s.MaSan == datSan.MaSan && s.MaChuSan == currentUserId.Value);
+                if (san == null)
+                {
+                    TempData["LoiThongBao"] = "Bạn không có quyền từ chối đơn này!";
+                    return RedirectToAction("QuanLyDatSan");
+                }
+            }
+
+            datSan.TrangThai = "Từ chối";
+            db.SubmitChanges();
+
+            TempData["ThanhCong"] = "Đã từ chối đơn đặt sân.";
+            return RedirectToAction("QuanLyDatSan");
+        }
+
+        // ============================================================
+        // GET: Admin/DuyetDon/5  (giữ lại tương thích GET cũ)
         // ============================================================
         public ActionResult DuyetDon(int id)
         {
@@ -331,13 +352,12 @@ namespace DATSANBONG.Controllers
             if (don != null)
             {
                 string role = Session["VaiTro"]?.ToString();
-                // Bảo mật chéo
-                if ((role == "Owner" || role == "ChuSan") && don.SanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
+                if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") &&
+                    don.SanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
                 {
                     TempData["LoiThongBao"] = "Bạn không có quyền phê duyệt đơn đặt của sân này.";
                     return RedirectToAction("QuanLyDatSan");
                 }
-
                 don.TrangThai = "Đã duyệt";
                 db.SubmitChanges();
                 TempData["ThanhCong"] = "Phê duyệt đơn đặt sân thành công!";
@@ -347,7 +367,6 @@ namespace DATSANBONG.Controllers
 
         // ============================================================
         // GET: Admin/HuyDon/5
-        // Hủy đơn đặt sân
         // ============================================================
         public ActionResult HuyDon(int id)
         {
@@ -355,13 +374,12 @@ namespace DATSANBONG.Controllers
             if (don != null)
             {
                 string role = Session["VaiTro"]?.ToString();
-                // Bảo mật chéo
-                if ((role == "Owner" || role == "ChuSan") && don.SanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
+                if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") &&
+                    don.SanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
                 {
                     TempData["LoiThongBao"] = "Bạn không có quyền hủy đơn đặt của sân này.";
                     return RedirectToAction("QuanLyDatSan");
                 }
-
                 don.TrangThai = "Đã hủy";
                 db.SubmitChanges();
                 TempData["ThanhCong"] = "Đã hủy đơn đặt sân thành công!";
@@ -372,8 +390,7 @@ namespace DATSANBONG.Controllers
         private readonly DATSANBONG.Data.QuanLySanBongDb _dbSB = new DATSANBONG.Data.QuanLySanBongDb();
 
         // ============================================================
-        // GET: Admin/QuanLyKhachHang
-        // Quản lý danh sách khách hàng (chỉ dành riêng cho Admin tổng)
+        // GET: Admin/QuanLyKhachHang (chỉ Admin tổng)
         // ============================================================
         [AdminAuth(Roles = "Admin")]
         public ActionResult QuanLyKhachHang()
@@ -381,38 +398,31 @@ namespace DATSANBONG.Controllers
             var users = _dbSB.LayDanhSachNguoiDung()
                 .Where(u => u.VaiTro != "Admin")
                 .ToList();
-
             return View(users);
         }
 
         // ============================================================
-        // GET: Admin/XoaKhachHang/5
-        // Xóa khách hàng (chỉ dành riêng cho Admin tổng)
+        // GET: Admin/XoaKhachHang/5 (chỉ Admin tổng)
         // ============================================================
         [AdminAuth(Roles = "Admin")]
         public ActionResult XoaKhachHang(int id)
         {
-            // Kiểm tra xem khách hàng có đơn đặt sân nào chưa hủy không
             var datSans = _dbSB.LayLichSuDatSanTheoNguoiDung(id)
                 .Where(d => d.TrangThai != "Đã hủy")
                 .ToList();
 
             if (datSans.Any())
-            {
                 TempData["LoiThongBao"] = "Không thể xóa vì khách hàng còn đơn đặt sân đang hoạt động.";
-            }
             else
             {
                 _dbSB.XoaNguoiDung(id);
                 TempData["ThanhCong"] = "Xóa khách hàng thành công!";
             }
-
             return RedirectToAction("QuanLyKhachHang");
         }
 
         // ============================================================
         // GET: Admin/LichDatSan
-        // Xem lịch đặt sân dưới dạng FullCalendar ô vuông
         // ============================================================
         public ActionResult LichDatSan()
         {
@@ -420,8 +430,7 @@ namespace DATSANBONG.Controllers
         }
 
         // ============================================================
-        // GET: Admin/GetDatSanJson
-        // Trả về danh sách đơn đặt sân dưới dạng JSON cho FullCalendar
+        // GET: Admin/GetDatSanJson  (JSON cho FullCalendar)
         // ============================================================
         public JsonResult GetDatSanJson()
         {
@@ -430,21 +439,21 @@ namespace DATSANBONG.Controllers
             string role = Session["VaiTro"]?.ToString();
             int? currentUserId = Session["MaND"] != null ? (int?)Convert.ToInt32(Session["MaND"]) : null;
 
-            // Nếu là chủ sân, lọc theo sân thuộc quyền sở hữu
-            if ((role == "Owner" || role == "ChuSan") && currentUserId.HasValue)
-            {
+            if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") && currentUserId.HasValue)
                 query = query.Where(d => d.SanBong.MaChuSan == currentUserId.Value);
-            }
 
-            var datSans = query.ToList();
-            var events = datSans.Select(d => new {
+            var events = query.ToList().Select(d => new {
                 id = d.MaDatSan,
-                title = (d.SanBong != null ? d.SanBong.TenSan : "Sân N/A") + " - " + (d.NguoiDung != null ? d.NguoiDung.HoTen : "Khách N/A"),
+                title = (d.SanBong != null ? d.SanBong.TenSan : "Sân N/A")
+                      + " - "
+                      + (d.NguoiDung != null ? d.NguoiDung.HoTen : "Khách N/A"),
                 start = (d.NgayDat.Date + d.GioBatDau).ToString("yyyy-MM-ddTHH:mm:ss"),
                 end = (d.NgayDat.Date + d.GioKetThuc).ToString("yyyy-MM-ddTHH:mm:ss"),
-                color = d.TrangThai == "Đã duyệt" ? "#28a745" : (d.TrangThai == "Chờ duyệt" ? "#ffc107" : "#dc3545"),
+                color = d.TrangThai == "Đã duyệt" ? "#28a745"
+                      : d.TrangThai == "Chờ duyệt" ? "#ffc107" : "#dc3545",
                 textColor = d.TrangThai == "Chờ duyệt" ? "#212529" : "#ffffff",
-                extendedProps = new {
+                extendedProps = new
+                {
                     status = d.TrangThai,
                     phone = d.NguoiDung != null ? d.NguoiDung.SoDienThoai : "",
                     price = d.TongTien.HasValue ? d.TongTien.Value.ToString("N0") + " VNĐ" : "0 VNĐ"
@@ -456,7 +465,6 @@ namespace DATSANBONG.Controllers
 
         // ============================================================
         // GET: Admin/ThongKe
-        // Giao diện vẽ biểu đồ thống kê doanh thu
         // ============================================================
         public ActionResult ThongKe()
         {
@@ -464,37 +472,28 @@ namespace DATSANBONG.Controllers
         }
 
         // ============================================================
-        // GET: Admin/GetDoanhThuJson
-        // Trả về dữ liệu thống kê doanh thu dạng JSON cho Chart.js
+        // GET: Admin/GetDoanhThuJson  (JSON cho Chart.js)
         // ============================================================
         public JsonResult GetDoanhThuJson()
         {
             var currentYear = DateTime.Now.Year;
-
             string role = Session["VaiTro"]?.ToString();
             int? currentUserId = Session["MaND"] != null ? (int?)Convert.ToInt32(Session["MaND"]) : null;
-            bool isOwner = (role == "Owner" || role == "ChuSan") && currentUserId.HasValue;
+            bool isOwner = (role == "Owner" || role == "ChuSan" || role == "Chủ sân") && currentUserId.HasValue;
 
-            // Lấy tất cả các đơn đặt sân đã duyệt
-            var bookingsQuery = db.DatSans.Where(d => d.TrangThai == "Đã duyệt" && d.NgayDat.Year == currentYear);
+            var bookingsQuery = db.DatSans
+                .Where(d => d.TrangThai == "Đã duyệt" && d.NgayDat.Year == currentYear);
             if (isOwner)
-            {
                 bookingsQuery = bookingsQuery.Where(d => d.SanBong.MaChuSan == currentUserId.Value);
-            }
             var bookings = bookingsQuery.ToList();
 
-            // Thống kê doanh thu theo 12 tháng
             var monthlyRevenue = Enumerable.Range(1, 12).Select(month => new {
                 Month = "Tháng " + month,
                 Revenue = bookings.Where(b => b.NgayDat.Month == month).Sum(b => b.TongTien) ?? 0
             }).ToList();
 
-            // Thống kê doanh thu theo từng sân bóng
             var fieldsQuery = db.SanBongs.AsQueryable();
-            if (isOwner)
-            {
-                fieldsQuery = fieldsQuery.Where(s => s.MaChuSan == currentUserId.Value);
-            }
+            if (isOwner) fieldsQuery = fieldsQuery.Where(s => s.MaChuSan == currentUserId.Value);
             var fields = fieldsQuery.ToList();
 
             var fieldRevenue = fields.Select(s => new {
@@ -508,6 +507,95 @@ namespace DATSANBONG.Controllers
         }
 
         // ============================================================
+        // GET: Admin/QuanLyChuSan  (chỉ Admin tổng)
+        // ============================================================
+        [AdminAuth(Roles = "Admin")]
+        public ActionResult QuanLyChuSan()
+        {
+            var chuSans = _dbSB.LayDanhSachNguoiDungTheoVaiTro("Chủ sân");
+            ViewBag.DanhSachSan = db.SanBongs.ToList();
+            ViewBag.SanCuaChuSan = _dbSB.LaySanCuaTungChuSan();
+            return View(chuSans);
+        }
+
+        // ============================================================
+        // POST: Admin/ThemChuSan
+        // ============================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuth(Roles = "Admin")]
+        public ActionResult ThemChuSan(string HoTen, string TaiKhoan, string MatKhau, string SoDienThoai)
+        {
+            if (string.IsNullOrWhiteSpace(HoTen) || string.IsNullOrWhiteSpace(TaiKhoan) || string.IsNullOrWhiteSpace(MatKhau))
+            {
+                TempData["LoiThongBao"] = "Vui lòng nhập đầy đủ họ tên, tài khoản và mật khẩu.";
+                return RedirectToAction("QuanLyChuSan");
+            }
+
+            if (_dbSB.TaiKhoanDaTonTai(TaiKhoan.Trim()))
+            {
+                TempData["LoiThongBao"] = $"Tài khoản \"{TaiKhoan.Trim()}\" đã tồn tại trong hệ thống.";
+                return RedirectToAction("QuanLyChuSan");
+            }
+
+            var nd = new DATSANBONG.Models.NguoiDung
+            {
+                HoTen = HoTen.Trim(),
+                TaiKhoan = TaiKhoan.Trim(),
+                MatKhau = DATSANBONG.Data.QuanLySanBongDb.HashPassword(MatKhau),
+                SoDienThoai = string.IsNullOrWhiteSpace(SoDienThoai) ? null : SoDienThoai.Trim(),
+                VaiTro = "Chủ sân"
+            };
+            _dbSB.ThemNguoiDung(nd);
+            TempData["ThanhCong"] = $"Đã thêm chủ sân \"{nd.HoTen}\" thành công.";
+            return RedirectToAction("QuanLyChuSan");
+        }
+
+        // ============================================================
+        // POST: Admin/PhanCongSan
+        // ============================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuth(Roles = "Admin")]
+        public ActionResult PhanCongSan(int MaND, int MaSan)
+        {
+            _dbSB.PhanCongSanChoChuSan(MaND, MaSan);
+            TempData["ThanhCong"] = "Đã phân công sân thành công.";
+            return RedirectToAction("QuanLyChuSan");
+        }
+
+        // ============================================================
+        // GET: Admin/DoiVaiTro?id=&vaiTro=
+        // ============================================================
+        [AdminAuth(Roles = "Admin")]
+        public ActionResult DoiVaiTro(int id, string vaiTro)
+        {
+            _dbSB.CapNhatVaiTro(id, vaiTro);
+            if (vaiTro == "Khách hàng")
+            {
+                _dbSB.GoChuSanKhoiTatCaSan(id);
+                TempData["ThanhCong"] = "Đã thu hồi quyền Chủ sân thành công.";
+            }
+            else
+            {
+                TempData["ThanhCong"] = $"Đã đổi vai trò thành \"{vaiTro}\" thành công.";
+            }
+            return RedirectToAction("QuanLyChuSan");
+        }
+
+        // ============================================================
+        // GET: Admin/XoaChuSan/5
+        // ============================================================
+        [AdminAuth(Roles = "Admin")]
+        public ActionResult XoaChuSan(int id)
+        {
+            _dbSB.GoChuSanKhoiTatCaSan(id);
+            _dbSB.XoaNguoiDung(id);
+            TempData["ThanhCong"] = "Đã xóa chủ sân thành công.";
+            return RedirectToAction("QuanLyChuSan");
+        }
+
+        // ============================================================
         // GET: Admin/CauHinhGia
         // ============================================================
         public ActionResult CauHinhGia()
@@ -516,21 +604,16 @@ namespace DATSANBONG.Controllers
             int? currentUserId = Session["MaND"] != null ? (int?)Convert.ToInt32(Session["MaND"]) : null;
 
             List<SanBong> sanbongs;
-            if ((role == "Owner" || role == "ChuSan") && currentUserId.HasValue)
-            {
+            if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") && currentUserId.HasValue)
                 sanbongs = db.SanBongs.Where(s => s.MaChuSan == currentUserId.Value).ToList();
-            }
             else
-            {
                 sanbongs = db.SanBongs.ToList();
-            }
 
             return View(sanbongs);
         }
 
         // ============================================================
-        // POST: Admin/CapNhatGia
-        // Cập nhật giá theo giờ nhanh qua AJAX
+        // POST: Admin/CapNhatGia  (AJAX)
         // ============================================================
         [HttpPost]
         public JsonResult CapNhatGia(int maSan, decimal giaMoi)
@@ -539,25 +622,18 @@ namespace DATSANBONG.Controllers
             {
                 var sanBong = db.SanBongs.SingleOrDefault(s => s.MaSan == maSan);
                 if (sanBong == null)
-                {
                     return Json(new { success = false, message = "Không tìm thấy sân bóng." });
-                }
 
                 string role = Session["VaiTro"]?.ToString();
-                // Kiểm soát bảo mật
-                if ((role == "Owner" || role == "ChuSan") && sanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
-                {
+                if ((role == "Owner" || role == "ChuSan" || role == "Chủ sân") &&
+                    sanBong.MaChuSan != Convert.ToInt32(Session["MaND"]))
                     return Json(new { success = false, message = "Bạn không có quyền cấu hình sân bóng này." });
-                }
 
                 if (giaMoi < 0)
-                {
                     return Json(new { success = false, message = "Giá thuê phải lớn hơn hoặc bằng 0." });
-                }
 
                 sanBong.GiaTheoGio = giaMoi;
                 db.SubmitChanges();
-
                 return Json(new { success = true, message = "Cập nhật giá thành công!" });
             }
             catch (Exception ex)
@@ -567,4 +643,3 @@ namespace DATSANBONG.Controllers
         }
     }
 }
-

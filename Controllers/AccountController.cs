@@ -8,6 +8,19 @@ namespace DATSANBONG.Controllers
     {
         private readonly QuanLySanBongDb _db = new QuanLySanBongDb();
 
+        // ─── HELPER: Chuẩn hóa vai trò ───────────────────────────────
+        private string ChuanHoaRole(string vaiTro)
+        {
+            switch (vaiTro?.Trim())
+            {
+                case "ChuSan":
+                case "Chủ sân": return "Owner";
+                case "KhachHang":
+                case "Khách hàng": return "KhachHang";
+                default: return vaiTro; // "Admin" giữ nguyên
+            }
+        }
+
         // ─── ĐĂNG NHẬP ────────────────────────────────────────────────
 
         [HttpGet]
@@ -37,36 +50,29 @@ namespace DATSANBONG.Controllers
                 return View(model);
             }
 
-            // Lưu session và chuẩn hóa vai trò
-            string role = nd.VaiTro;
-            if (role == "ChuSan") role = "Owner";
+            // Chuẩn hóa vai trò
+            string role = ChuanHoaRole(nd.VaiTro);
 
-            Session["MaND"]     = nd.MaND;
-            Session["HoTen"]    = nd.HoTen;
-            Session["VaiTro"]   = role;
+            Session["MaND"] = nd.MaND;
+            Session["HoTen"] = nd.HoTen;
+            Session["VaiTro"] = role;
             Session["UserRole"] = role;
 
             if (role == "Owner")
-            {
                 Session["MaChuSan"] = nd.MaND;
-            }
 
-            // Điều hướng người dùng sau khi đăng nhập thành công
+            // Điều hướng sau đăng nhập
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
-                return Redirect(returnUrl);
+                // Chỉ redirect returnUrl nếu user có quyền Admin/Owner
+                if (role == "Admin" || role == "Owner")
+                    return Redirect(returnUrl);
             }
 
             if (role == "Admin" || role == "Owner")
-            {
-                // Chuyển hướng Admin và Chủ sân (Owner) về trang Tổng quan (Dashboard) của AdminController
                 return RedirectToAction("Dashboard", "Admin");
-            }
             else
-            {
-                // Chuyển hướng Khách hàng về trang chủ của HomeController
                 return RedirectToAction("Index", "Home");
-            }
         }
 
         // ─── ĐĂNG KÝ ──────────────────────────────────────────────────
@@ -96,26 +102,28 @@ namespace DATSANBONG.Controllers
 
             var nguoiDung = new NguoiDung
             {
-                HoTen       = model.HoTen.Trim(),
-                TaiKhoan    = model.TaiKhoan.Trim(),
-                MatKhau     = QuanLySanBongDb.HashPassword(model.MatKhau),
+                HoTen = model.HoTen.Trim(),
+                TaiKhoan = model.TaiKhoan.Trim(),
+                MatKhau = QuanLySanBongDb.HashPassword(model.MatKhau),
                 SoDienThoai = model.SoDienThoai?.Trim(),
-                VaiTro      = "Khách hàng"
+                VaiTro = "Khách hàng"
             };
 
             int maND = _db.ThemNguoiDung(nguoiDung);
 
-            // Tự động đăng nhập sau khi đăng ký
-            Session["MaND"]     = maND;
-            Session["HoTen"]    = nguoiDung.HoTen;
-            Session["VaiTro"]   = nguoiDung.VaiTro;
-            Session["UserRole"] = nguoiDung.VaiTro;
+            // Chuẩn hóa role trước khi lưu session
+            string role = ChuanHoaRole(nguoiDung.VaiTro); // → "KhachHang"
+
+            Session["MaND"] = maND;
+            Session["HoTen"] = nguoiDung.HoTen;
+            Session["VaiTro"] = role;
+            Session["UserRole"] = role;
 
             TempData["ThanhCong"] = "Đăng ký thành công! Chào mừng bạn đến với DatSanBong.";
             return RedirectToAction("Index", "Home");
         }
 
-        // ─── ĐĂNG XUẤT (LOGOUT) ────────────────────────────────────────
+        // ─── ĐĂNG XUẤT ────────────────────────────────────────────────
 
         [HttpPost]
         [ValidateAntiForgeryToken]

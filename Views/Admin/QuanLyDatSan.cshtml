@@ -1,154 +1,410 @@
-@model List<DATSANBONG.Models.DatSan>
-
+@model IEnumerable<DATSANBONG.Models.DatSan>
 @{
-    ViewBag.Title = "Quản lý đơn đặt sân";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    var currentFilter = ViewBag.TrangThaiChon as string;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Quản lý đặt sân";
+    string filter = ViewBag.TrangThaiFilter ?? "Chờ duyệt";
+    int soChoDuyet = ViewBag.SoChoDuyet != null ? (int)ViewBag.SoChoDuyet : 0;
+    string role = Session["VaiTro"]?.ToString();
+    bool isChuSan = (role == "ChuSan" || role == "Owner");
 }
 
-<!-- Page Header in Admindek Style -->
-<div class="page-header-blue d-flex justify-content-between align-items-center">
-    <div>
-        <h4 class="mb-0 fw-bold">Quản lý đơn đặt sân</h4>
-        <p class="text-muted mb-0 small">Duyệt hoặc hủy các yêu cầu thuê sân bóng từ khách hàng.</p>
-    </div>
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="@Url.Action("Dashboard")">Dashboard</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Đơn đặt sân</li>
-        </ol>
-    </nav>
-</div>
+<style>
+    .ql-wrap {
+        background: #f4f7f5;
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
 
-<!-- Status Filter Component -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3">
-        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-funnel me-2 text-primary"></i>Bộ lọc đơn hàng</h6>
-    </div>
-    <div class="card-body py-3">
-        <form method="get" action="@Url.Action("QuanLyDatSan", "Admin")" class="row g-3 align-items-center">
-            <div class="col-auto">
-                <label class="col-form-label fw-semibold text-muted">Trạng thái đơn:</label>
-            </div>
-            <div class="col-auto">
-                <select name="trangThai" class="form-select" onchange="this.form.submit()">
-                    <option value="" @(string.IsNullOrEmpty(currentFilter) ? "selected" : "")>-- Tất cả trạng thái --</option>
-                    <option value="Chờ duyệt" @(currentFilter == "Chờ duyệt" ? "selected" : "")>Chờ duyệt</option>
-                    <option value="Đã duyệt" @(currentFilter == "Đã duyệt" ? "selected" : "")>Đã duyệt</option>
-                    <option value="Đã hủy" @(currentFilter == "Đã hủy" ? "selected" : "")>Đã hủy</option>
-                </select>
-            </div>
-        </form>
-    </div>
-</div>
+    .ql-card {
+        background: #fff;
+        border-radius: .75rem;
+        box-shadow: 0 2px 16px rgba(0,60,30,.08);
+        border: none;
+    }
 
-<!-- Bookings Card Table -->
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
-        <h5 class="mb-0 text-dark fw-bold">
-            <i class="bi bi-calendar-check-fill text-success me-2"></i>Danh sách đơn đặt sân
-        </h5>
-    </div>
-    
-    <div class="card-block p-0">
-        @if (Model == null || !Model.Any())
-        {
-            <div class="text-center py-5 text-muted">
-                <i class="bi bi-calendar-x fs-1 text-warning mb-3 d-block"></i>
-                <h5 class="fw-bold">Không tìm thấy đơn đặt sân nào</h5>
-                <p class="small mb-0">Hệ thống chưa ghi nhận đơn hàng nào phù hợp với bộ lọc đã chọn.</p>
-            </div>
+    .tab-filter a {
+        border-radius: .5rem;
+        font-weight: 600;
+        font-size: .85rem;
+        padding: .38rem .9rem;
+        text-decoration: none;
+        transition: all .18s;
+    }
+
+        .tab-filter a.active {
+            background: #1a6b44;
+            color: #fff;
         }
-        else
-        {
+
+        .tab-filter a:not(.active) {
+            background: #f0f5f2;
+            color: #5a6e63;
+            border: 1px solid #d6e4dc;
+        }
+
+            .tab-filter a:not(.active):hover {
+                background: #e0ede6;
+                color: #1a6b44;
+            }
+
+    .ql-table thead th {
+        background: #f0f5f2;
+        color: #5a6e63;
+        font-weight: 600;
+        font-size: .83rem;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        padding: .85rem 1rem;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .ql-table tbody tr {
+        border-bottom: 1px solid #f0f4f2;
+        transition: background .15s;
+    }
+
+        .ql-table tbody tr:hover {
+            background: #f8fdfb;
+        }
+
+    .ql-table tbody td {
+        padding: .8rem 1rem;
+        vertical-align: middle;
+        font-size: .9rem;
+    }
+
+    .ql-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    /* Đường viền màu trái theo trạng thái */
+    .row-cho {
+        border-left: 3px solid #f59e0b;
+    }
+
+    .row-duyet {
+        border-left: 3px solid #22c55e;
+    }
+
+    .row-tuchoi {
+        border-left: 3px solid #ef4444;
+    }
+
+    .row-huy {
+        border-left: 3px solid #94a3b8;
+    }
+
+    /* Avatar chữ cái */
+    .av {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #e6f4ec;
+        color: #1a6b44;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: .88rem;
+        flex-shrink: 0;
+    }
+
+    /* Badge trạng thái */
+    .badge-cho {
+        background: #fff3cd;
+        color: #92600a;
+    }
+
+    .badge-duyet {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-tuchoi {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-huy {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .tt-badge {
+        display: inline-block;
+        padding: .28rem .75rem;
+        border-radius: 2rem;
+        font-size: .78rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    /* Nút hành động */
+    .btn-duyet {
+        background: #1a6b44;
+        color: #fff;
+        border: none;
+        border-radius: .45rem;
+        padding: .32rem .75rem;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s, transform .1s;
+    }
+
+        .btn-duyet:hover {
+            background: #155736;
+            transform: translateY(-1px);
+        }
+
+    .btn-tuchoi {
+        background: #fff0f0;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+        border-radius: .45rem;
+        padding: .32rem .75rem;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s, transform .1s;
+    }
+
+        .btn-tuchoi:hover {
+            background: #fee2e2;
+            transform: translateY(-1px);
+        }
+
+    /* Empty state */
+    .empty-state {
+        padding: 4rem 1rem;
+        text-align: center;
+        color: #94a3b8;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            opacity: .3;
+            display: block;
+            margin-bottom: .75rem;
+        }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: .83rem;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: #94a3b8;
+    }
+</style>
+
+<div class="ql-wrap">
+    <div class="container-fluid" style="max-width:1240px;">
+
+        <!-- ── Tiêu đề ── -->
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item">
+                            <a href="@Url.Action("Dashboard","Admin")"
+                               class="text-decoration-none" style="color:#1a6b44;">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item active text-muted">Quản lý đặt sân</li>
+                    </ol>
+                </nav>
+                <h4 class="fw-bold mb-0" style="color:#0d3b2e;">
+                    <i class="bi bi-calendar-check-fill me-2" style="color:#1a6b44;"></i>Quản lý đặt sân
+                </h4>
+                <small class="text-muted">
+                    @if (isChuSan)
+                    {<text>Duyệt các yêu cầu đặt sân thuộc sân bóng bạn quản lý</text> }
+                else
+                { <text>Xem và xử lý tất cả đơn đặt sân trong hệ thống</text>}
+                </small>
+            </div>
+
+            @* Badge tổng chờ duyệt *@
+            @if (soChoDuyet > 0)
+            {
+                <div style="background:#fff8e6; border:1px solid #fde68a; border-radius:.6rem;
+                        padding:.5rem 1rem; display:flex; align-items:center; gap:.5rem;">
+                    <i class="bi bi-bell-fill" style="color:#f59e0b;"></i>
+                    <span style="font-weight:700; color:#92600a; font-size:.88rem;">
+                        @soChoDuyet đơn đang chờ duyệt
+                    </span>
+                </div>
+            }
+        </div>
+
+        <!-- ── Card chính ── -->
+        <div class="ql-card">
+
+            <!-- Tab lọc -->
+            <div style="padding:1rem 1.25rem; border-bottom:1px solid #f0f4f2;">
+                <div class="tab-filter d-flex gap-2 flex-wrap">
+                    @foreach (var tt in new[] { "Chờ duyệt", "Đã duyệt", "Từ chối", "Đã hủy", "Tất cả" })
+                    {
+                        bool isActive = (filter == tt);
+                        <a href="@Url.Action("QuanLyDatSan","Admin", new { trangThai = tt })"
+                           class="@(isActive ? "active" : "")">
+                            @tt
+                            @if (tt == "Chờ duyệt" && soChoDuyet > 0)
+                            {
+                                <span style="background:#ef4444; color:#fff; border-radius:2rem;
+                                         font-size:.7rem; padding:.1rem .45rem; margin-left:.3rem;
+                                         font-weight:700;">@soChoDuyet</span>
+                                    }
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Bảng -->
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="table ql-table mb-0">
+                    <thead>
                         <tr>
-                            <th class="ps-4">Khách hàng</th>
+                            <th style="width:44px;">#</th>
+                            <th>Khách hàng</th>
                             <th>Sân bóng</th>
-                            <th>Ngày chơi</th>
-                            <th>Khung giờ</th>
-                            <th class="text-end">Thành tiền</th>
-                            <th class="text-center">Trạng thái</th>
-                            <th class="text-center pe-4" style="width: 200px;">Thao tác</th>
+                            <th>Ngày đặt</th>
+                            <th>Giờ chơi</th>
+                            <th>Tổng tiền</th>
+                            <th>Ghi chú</th>
+                            <th>Trạng thái</th>
+                            <th class="text-center" style="width:160px;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model)
+                        @if (!Model.Any())
                         {
                             <tr>
-                                <!-- Customer Info -->
-                                <td class="ps-4">
-                                    <div class="fw-bold text-dark">@(item.NguoiDung != null ? item.NguoiDung.HoTen : "N/A")</div>
-                                    <div class="small text-muted">
-                                        <i class="bi bi-telephone me-1"></i>@(item.NguoiDung != null ? item.NguoiDung.SoDienThoai : "N/A")
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox"></i>
+                                        <div class="fw-semibold" style="font-size:1rem; color:#64748b;">
+                                            Không có đơn đặt sân nào
+                                        </div>
+                                        <small>trong mục "<strong>@filter</strong>"</small>
                                     </div>
                                 </td>
-                                <!-- Pitch Info -->
+                            </tr>
+                        }
+
+                        @{ int stt = 1; }
+                        @foreach (var item in Model)
+                        {
+                            string rowClass = item.TrangThai == "Chờ duyệt" ? "row-cho"
+                                            : item.TrangThai == "Đã duyệt" ? "row-duyet"
+                                            : item.TrangThai == "Từ chối" ? "row-tuchoi"
+                                            : "row-huy";
+
+                            string badgeClass = item.TrangThai == "Chờ duyệt" ? "badge-cho"
+                                              : item.TrangThai == "Đã duyệt" ? "badge-duyet"
+                                              : item.TrangThai == "Từ chối" ? "badge-tuchoi"
+                                              : "badge-huy";
+
+                            string avatarChar = item.NguoiDung?.HoTen != null
+                                ? item.NguoiDung.HoTen.Substring(item.NguoiDung.HoTen.LastIndexOf(' ') + 1, 1).ToUpper()
+                                : "?";
+
+                            <tr class="@rowClass">
+                                <td class="text-muted" style="font-size:.82rem;">@(stt++)</td>
+
                                 <td>
-                                    <div class="fw-bold text-success">@(item.SanBong != null ? item.SanBong.TenSan : "N/A")</div>
-                                    <div class="small text-muted">
-                                        <i class="bi bi-tag me-1"></i>@(item.SanBong != null && item.SanBong.LoaiSan != null ? item.SanBong.LoaiSan.TenLoai : "N/A")
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="av">@avatarChar</div>
+                                        <div>
+                                            <div class="fw-semibold" style="color:#1e293b; font-size:.9rem; line-height:1.3;">
+                                                @(item.NguoiDung?.HoTen ?? "—")
+                                            </div>
+                                            <small class="text-muted">
+                                                <i class="bi bi-telephone" style="font-size:.75rem;"></i>
+                                                @(item.NguoiDung?.SoDienThoai ?? "—")
+                                            </small>
+                                        </div>
                                     </div>
                                 </td>
-                                <!-- Playing Date -->
+
                                 <td>
-                                    @item.NgayDat.ToString("dd/MM/yyyy")
+                                    <div class="fw-semibold" style="color:#0d3b2e; font-size:.9rem;">
+                                        @(item.SanBong?.TenSan ?? "—")
+                                    </div>
+                                    <small class="text-muted">
+                                        @(item.SanBong?.LoaiSan?.TenLoai ?? "")
+                                    </small>
                                 </td>
-                                <!-- Booking Time Slot -->
-                                <td class="fw-bold">
-                                    @{
-                                        string startStr = item.GioBatDau.ToString(@"hh\:mm");
-                                        string endStr = (item.GioKetThuc.Hours == 23 && item.GioKetThuc.Minutes == 59) ? "24:00" : item.GioKetThuc.ToString(@"hh\:mm");
-                                    }
-                                    @startStr - @endStr
+
+                                <td>
+                                    <div class="fw-semibold" style="font-size:.9rem;">
+                                        @item.NgayDat.ToString("dd/MM/yyyy")
+                                    </div>
+                                    <small class="text-muted">
+                                        @item.NgayDat.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))
+                                    </small>
                                 </td>
-                                <!-- Total Amount -->
-                                <td class="text-end fw-bold text-danger">
-                                    @(item.TongTien.HasValue ? item.TongTien.Value.ToString("N0") + " VNĐ" : "—")
+
+                                <td>
+                                    <span style="background:#e6f4ec; color:#1a6b44; border-radius:.4rem;
+                                             padding:.25rem .6rem; font-size:.82rem; font-weight:600;
+                                             white-space:nowrap;">
+                                        <i class="bi bi-clock" style="font-size:.75rem; margin-right:.2rem;"></i>
+                                        @item.GioBatDau.ToString(@"hh\:mm") – @item.GioKetThuc.ToString(@"hh\:mm")
+                                    </span>
                                 </td>
-                                <!-- Status Badge -->
+
+                                <td>
+                                    <span class="fw-bold" style="color:#1a6b44; font-size:.92rem;">
+                                        @string.Format("{0:N0}", item.TongTien)
+                                    </span>
+                                    <small class="text-muted"> VNĐ</small>
+                                </td>
+
+                                <td style="max-width:130px;">
+                                    <small class="text-muted" style="display:block; overflow:hidden;
+                                    text-overflow:ellipsis; white-space:nowrap;" title="@item.GhiChu">
+                                        @(string.IsNullOrWhiteSpace(item.GhiChu) ? "—" : item.GhiChu)
+                                    </small>
+                                </td>
+
+                                <td>
+                                    <span class="tt-badge @badgeClass">@item.TrangThai</span>
+                                </td>
+
                                 <td class="text-center">
                                     @if (item.TrangThai == "Chờ duyệt")
                                     {
-                                        <span class="badge bg-warning-light text-warning border border-warning border-opacity-25 px-2.5 py-1.5 fw-semibold">
-                                            Chờ duyệt
-                                        </span>
-                                    }
-                                    else if (item.TrangThai == "Đã duyệt")
-                                    {
-                                        <span class="badge bg-success-light text-success border border-success border-opacity-25 px-2.5 py-1.5 fw-semibold">
-                                            Đã duyệt
-                                        </span>
-                                    }
-                                    else if (item.TrangThai == "Đã hủy")
-                                    {
-                                        <span class="badge bg-danger-light text-danger border border-danger border-opacity-25 px-2.5 py-1.5 fw-semibold">
-                                            Đã hủy
-                                        </span>
-                                    }
-                                </td>
-                                <!-- Approval Actions -->
-                                <td class="text-center pe-4">
-                                    @if (item.TrangThai == "Chờ duyệt")
-                                    {
-                                        <div class="d-flex gap-1.5 justify-content-center">
-                                            <a href="@Url.Action("DuyetDon", "Admin", new { id = item.MaDatSan })" 
-                                               class="btn btn-success btn-sm px-2.5 py-1.5 fw-semibold" 
-                                               onclick="return confirm('Bạn có chắc muốn PHÊ DUYỆT đơn đặt sân này không?');">
+                                        @* Nút Duyệt *@
+                                        using (Html.BeginForm("DuyetDatSan", "Admin",
+                                            FormMethod.Post, new { @class = "d-inline" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="maDatSan" value="@item.MaDatSan" />
+                                            <button type="submit" class="btn-duyet me-1"
+                                                    onclick="return confirm('Xác nhận DUYỆT đơn #@item.MaDatSan?')">
                                                 <i class="bi bi-check-lg"></i> Duyệt
-                                            </a>
-                                            <a href="@Url.Action("HuyDon", "Admin", new { id = item.MaDatSan })" 
-                                               class="btn btn-outline-danger btn-sm px-2.5 py-1.5 fw-semibold" 
-                                               onclick="return confirm('Bạn có chắc muốn HỦY đơn đặt sân này không?');">
-                                                <i class="bi bi-x-lg"></i> Hủy
-                                            </a>
-                                        </div>
+                                            </button>
+                                        }
+                                        @* Nút Từ chối *@
+                                        using (Html.BeginForm("TuChoiDatSan", "Admin",
+                                            FormMethod.Post, new { @class = "d-inline" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="maDatSan" value="@item.MaDatSan" />
+                                            <button type="submit" class="btn-tuchoi"
+                                                    onclick="return confirm('Xác nhận TỪ CHỐI đơn #@item.MaDatSan?')">
+                                                <i class="bi bi-x-lg"></i> Từ chối
+                                            </button>
+                                        }
                                     }
                                     else
                                     {
-                                        <span class="text-muted small italic"><i class="bi bi-lock-fill me-1"></i>Đã xử lý</span>
+                                        <span class="text-muted" style="font-size:.82rem;">—</span>
                                     }
                                 </td>
                             </tr>
@@ -156,6 +412,25 @@
                     </tbody>
                 </table>
             </div>
-        }
+
+            <!-- Footer bảng -->
+            @if (Model.Any())
+            {
+                <div style="padding:.75rem 1.25rem; border-top:1px solid #f0f4f2;
+                        background:#fafcfb; border-radius:0 0 .75rem .75rem;">
+                    <small class="text-muted">
+                        Hiển thị <strong>@Model.Count()</strong> đơn đặt sân
+                        &nbsp;·&nbsp; Lọc: <strong>@filter</strong>
+                        @if (filter == "Chờ duyệt" && soChoDuyet > 0)
+                        {
+                            <span style="color:#f59e0b; font-weight:700;">
+                                — @soChoDuyet đơn cần xử lý
+                            </span>
+                        }
+                    </small>
+                </div>
+            }
+        </div>
+
     </div>
 </div>
