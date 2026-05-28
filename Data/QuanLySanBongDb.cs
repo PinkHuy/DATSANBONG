@@ -10,10 +10,6 @@ using DATSANBONG.Models;
 
 namespace DATSANBONG.Data
 {
-    /// <summary>
-    /// Lớp truy cập dữ liệu trung tâm sử dụng ADO.NET
-    /// Cung cấp helper methods cho tất cả bảng trong database QuanLySanBong_MVC
-    /// </summary>
     public class QuanLySanBongDb
     {
         private readonly string _connectionString;
@@ -23,21 +19,18 @@ namespace DATSANBONG.Data
             _connectionString = ConfigurationManager.ConnectionStrings["QuanLySanBongDb"].ConnectionString;
         }
 
-        /// <summary>Tạo SqlConnection mới từ connection string</summary>
         private SqlConnection GetConnection() => new SqlConnection(_connectionString);
 
         // ─────────────────────────────────────────────────────────────
-        //  HASH MẬT KHẨU (SHA-256)
+        //  HASH MẬT KHẨU
         // ─────────────────────────────────────────────────────────────
-
         public static string HashPassword(string password)
         {
             using (var sha256 = SHA256.Create())
             {
                 byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
                 var sb = new StringBuilder();
-                foreach (byte b in bytes)
-                    sb.Append(b.ToString("x2"));
+                foreach (byte b in bytes) sb.Append(b.ToString("x2"));
                 return sb.ToString();
             }
         }
@@ -45,34 +38,24 @@ namespace DATSANBONG.Data
         // ─────────────────────────────────────────────────────────────
         //  NGƯỜI DÙNG
         // ─────────────────────────────────────────────────────────────
-
-        /// <summary>Lấy người dùng theo tài khoản và mật khẩu (đã hash)</summary>
         public NguoiDung DangNhap(string taiKhoan, string matKhauHash)
         {
-            const string sql = @"
-                SELECT MaND, HoTen, TaiKhoan, MatKhau, SoDienThoai, VaiTro
-                FROM   NguoiDung
-                WHERE  TaiKhoan = @TaiKhoan AND MatKhau = @MatKhau";
-
+            const string sql = @"SELECT MaND,HoTen,TaiKhoan,MatKhau,SoDienThoai,VaiTro
+                                 FROM NguoiDung WHERE TaiKhoan=@TaiKhoan AND MatKhau=@MatKhau";
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
                 cmd.Parameters.AddWithValue("@TaiKhoan", taiKhoan);
                 cmd.Parameters.AddWithValue("@MatKhau", matKhauHash);
                 conn.Open();
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                        return MapNguoiDung(reader);
-                }
+                using (var r = cmd.ExecuteReader()) { if (r.Read()) return MapNguoiDung(r); }
             }
             return null;
         }
 
-        /// <summary>Kiểm tra tài khoản đã tồn tại chưa</summary>
         public bool TaiKhoanDaTonTai(string taiKhoan)
         {
-            const string sql = "SELECT COUNT(1) FROM NguoiDung WHERE TaiKhoan = @TaiKhoan";
+            const string sql = "SELECT COUNT(1) FROM NguoiDung WHERE TaiKhoan=@TaiKhoan";
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
@@ -82,14 +65,11 @@ namespace DATSANBONG.Data
             }
         }
 
-        /// <summary>Thêm người dùng mới, trả về MaND mới</summary>
         public int ThemNguoiDung(NguoiDung nd)
         {
-            const string sql = @"
-                INSERT INTO NguoiDung (HoTen, TaiKhoan, MatKhau, SoDienThoai, VaiTro)
-                VALUES (@HoTen, @TaiKhoan, @MatKhau, @SoDienThoai, @VaiTro);
-                SELECT SCOPE_IDENTITY();";
-
+            const string sql = @"INSERT INTO NguoiDung(HoTen,TaiKhoan,MatKhau,SoDienThoai,VaiTro)
+                                 VALUES(@HoTen,@TaiKhoan,@MatKhau,@SoDienThoai,@VaiTro);
+                                 SELECT SCOPE_IDENTITY();";
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
@@ -103,48 +83,37 @@ namespace DATSANBONG.Data
             }
         }
 
-        /// <summary>Lấy tất cả người dùng (dùng cho Admin)</summary>
         public List<NguoiDung> LayDanhSachNguoiDung()
         {
-            const string sql = "SELECT MaND, HoTen, TaiKhoan, MatKhau, SoDienThoai, VaiTro FROM NguoiDung ORDER BY MaND";
+            const string sql = "SELECT MaND,HoTen,TaiKhoan,MatKhau,SoDienThoai,VaiTro FROM NguoiDung ORDER BY MaND";
             return QueryList(sql, null, MapNguoiDung);
         }
 
-        /// <summary>Lấy người dùng theo MaND</summary>
         public NguoiDung LayNguoiDungTheoMa(int maND)
         {
-            const string sql = "SELECT MaND, HoTen, TaiKhoan, MatKhau, SoDienThoai, VaiTro FROM NguoiDung WHERE MaND = @MaND";
+            const string sql = "SELECT MaND,HoTen,TaiKhoan,MatKhau,SoDienThoai,VaiTro FROM NguoiDung WHERE MaND=@MaND";
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
                 cmd.Parameters.AddWithValue("@MaND", maND);
                 conn.Open();
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read()) return MapNguoiDung(reader);
-                }
+                using (var r = cmd.ExecuteReader()) { if (r.Read()) return MapNguoiDung(r); }
             }
             return null;
         }
 
-        /// <summary>Xoá người dùng theo MaND</summary>
         public void XoaNguoiDung(int maND)
         {
-            // Xoá các đơn đặt sân của khách hàng trước để tránh lỗi ràng buộc khoá ngoại (Foreign Key Constraint)
-            const string sqlDatSan = "DELETE FROM DatSan WHERE MaND = @MaND";
-            ExecuteNonQuery(sqlDatSan, cmd => cmd.Parameters.AddWithValue("@MaND", maND));
-
-            const string sql = "DELETE FROM NguoiDung WHERE MaND = @MaND";
-            ExecuteNonQuery(sql, cmd => cmd.Parameters.AddWithValue("@MaND", maND));
+            ExecuteNonQuery("DELETE FROM DatSan WHERE MaND=@MaND", cmd => cmd.Parameters.AddWithValue("@MaND", maND));
+            ExecuteNonQuery("DELETE FROM NguoiDung WHERE MaND=@MaND", cmd => cmd.Parameters.AddWithValue("@MaND", maND));
         }
 
         // ─────────────────────────────────────────────────────────────
         //  LOẠI SÂN
         // ─────────────────────────────────────────────────────────────
-
         public List<LoaiSan> LayDanhSachLoaiSan()
         {
-            const string sql = "SELECT MaLoai, TenLoai, MoTa FROM LoaiSan ORDER BY MaLoai";
+            const string sql = "SELECT MaLoai,TenLoai,MoTa FROM LoaiSan ORDER BY MaLoai";
             return QueryList(sql, null, r => new LoaiSan
             {
                 MaLoai = (int)r["MaLoai"],
@@ -155,7 +124,7 @@ namespace DATSANBONG.Data
 
         public LoaiSan LayLoaiSanTheoMa(int maLoai)
         {
-            const string sql = "SELECT MaLoai, TenLoai, MoTa FROM LoaiSan WHERE MaLoai = @MaLoai";
+            const string sql = "SELECT MaLoai,TenLoai,MoTa FROM LoaiSan WHERE MaLoai=@MaLoai";
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
@@ -177,49 +146,37 @@ namespace DATSANBONG.Data
         // ─────────────────────────────────────────────────────────────
         //  SÂN BÓNG
         // ─────────────────────────────────────────────────────────────
-
         public List<SanBong> LayDanhSachSanBong(bool chiHoatDong = false)
         {
-            string sql = @"
-                SELECT s.MaSan, s.TenSan, s.MaLoai, s.GiaTheoGio, s.HinhAnh, s.TrangThai, s.MaSanCha,
-                       l.TenLoai, l.MoTa AS MoTaLoai
-                FROM   SanBong s
-                JOIN   LoaiSan l ON s.MaLoai = l.MaLoai";
-            if (chiHoatDong) sql += " WHERE s.TrangThai = N'Hoạt động'";
+            string sql = @"SELECT s.MaSan,s.TenSan,s.MaLoai,s.GiaTheoGio,s.HinhAnh,s.TrangThai,s.MaSanCha,
+                                  l.TenLoai,l.MoTa AS MoTaLoai
+                           FROM SanBong s JOIN LoaiSan l ON s.MaLoai=l.MaLoai";
+            if (chiHoatDong) sql += " WHERE s.TrangThai=N'Hoạt động'";
             sql += " ORDER BY s.MaSan";
-
             return QueryList(sql, null, MapSanBong);
         }
 
         public SanBong LaySanBongTheoMa(int maSan)
         {
-            const string sql = @"
-                SELECT s.MaSan, s.TenSan, s.MaLoai, s.GiaTheoGio, s.HinhAnh, s.TrangThai, s.MaSanCha,
-                       l.TenLoai, l.MoTa AS MoTaLoai
-                FROM   SanBong s
-                JOIN   LoaiSan l ON s.MaLoai = l.MaLoai
-                WHERE  s.MaSan = @MaSan";
-
+            const string sql = @"SELECT s.MaSan,s.TenSan,s.MaLoai,s.GiaTheoGio,s.HinhAnh,s.TrangThai,s.MaSanCha,
+                                        l.TenLoai,l.MoTa AS MoTaLoai
+                                 FROM SanBong s JOIN LoaiSan l ON s.MaLoai=l.MaLoai
+                                 WHERE s.MaSan=@MaSan";
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
                 cmd.Parameters.AddWithValue("@MaSan", maSan);
                 conn.Open();
-                using (var r = cmd.ExecuteReader())
-                {
-                    if (r.Read()) return MapSanBong(r);
-                }
+                using (var r = cmd.ExecuteReader()) { if (r.Read()) return MapSanBong(r); }
             }
             return null;
         }
 
         public int ThemSanBong(SanBong san)
         {
-            const string sql = @"
-                INSERT INTO SanBong (TenSan, MaLoai, GiaTheoGio, HinhAnh, TrangThai, MaSanCha)
-                VALUES (@TenSan, @MaLoai, @GiaTheoGio, @HinhAnh, @TrangThai, @MaSanCha);
-                SELECT SCOPE_IDENTITY();";
-
+            const string sql = @"INSERT INTO SanBong(TenSan,MaLoai,GiaTheoGio,HinhAnh,TrangThai,MaSanCha)
+                                 VALUES(@TenSan,@MaLoai,@GiaTheoGio,@HinhAnh,@TrangThai,@MaSanCha);
+                                 SELECT SCOPE_IDENTITY();";
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
@@ -236,12 +193,9 @@ namespace DATSANBONG.Data
 
         public void CapNhatSanBong(SanBong san)
         {
-            const string sql = @"
-                UPDATE SanBong
-                SET    TenSan = @TenSan, MaLoai = @MaLoai, GiaTheoGio = @GiaTheoGio,
-                       HinhAnh = @HinhAnh, TrangThai = @TrangThai, MaSanCha = @MaSanCha
-                WHERE  MaSan = @MaSan";
-
+            const string sql = @"UPDATE SanBong SET TenSan=@TenSan,MaLoai=@MaLoai,GiaTheoGio=@GiaTheoGio,
+                                        HinhAnh=@HinhAnh,TrangThai=@TrangThai,MaSanCha=@MaSanCha
+                                 WHERE MaSan=@MaSan";
             ExecuteNonQuery(sql, cmd =>
             {
                 cmd.Parameters.AddWithValue("@MaSan", san.MaSan);
@@ -256,19 +210,18 @@ namespace DATSANBONG.Data
 
         public void XoaSanBong(int maSan)
         {
-            const string sql = "DELETE FROM SanBong WHERE MaSan = @MaSan";
-            ExecuteNonQuery(sql, cmd => cmd.Parameters.AddWithValue("@MaSan", maSan));
+            ExecuteNonQuery("DELETE FROM SanBong WHERE MaSan=@MaSan",
+                cmd => cmd.Parameters.AddWithValue("@MaSan", maSan));
         }
 
         // ─────────────────────────────────────────────────────────────
         //  ĐẶT SÂN
         // ─────────────────────────────────────────────────────────────
-
         public int ThemDatSan(DatSan ds)
         {
             const string sql = @"
-                INSERT INTO DatSan (MaND, MaSan, NgayDat, GioBatDau, GioKetThuc, TongTien, GhiChu, TrangThai)
-                VALUES (@MaND, @MaSan, @NgayDat, @GioBatDau, @GioKetThuc, @TongTien, @GhiChu, @TrangThai);
+                INSERT INTO DatSan(MaND,MaSan,NgayDat,GioBatDau,GioKetThuc,TongTien,GhiChu,TrangThai,maSanCon)
+                VALUES(@MaND,@MaSan,@NgayDat,@GioBatDau,@GioKetThuc,@TongTien,@GhiChu,@TrangThai,@MaSanCon);
                 SELECT SCOPE_IDENTITY();";
 
             using (var conn = GetConnection())
@@ -282,6 +235,8 @@ namespace DATSANBONG.Data
                 cmd.Parameters.AddWithValue("@TongTien", ds.TongTien);
                 cmd.Parameters.AddWithValue("@GhiChu", (object)ds.GhiChu ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@TrangThai", ds.TrangThai ?? "Chờ duyệt");
+                // FIX CS1503: MaSanCon là string, cast object đúng rồi
+                cmd.Parameters.AddWithValue("@MaSanCon", (object)ds.MaSanCon ?? DBNull.Value);
                 conn.Open();
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
@@ -290,43 +245,33 @@ namespace DATSANBONG.Data
         public List<DatSan> LayLichSuDatSanTheoNguoiDung(int maND)
         {
             const string sql = @"
-                SELECT d.MaDatSan, d.MaND, d.MaSan, d.NgayDat, d.GioBatDau, d.GioKetThuc,
-                       d.TongTien, d.GhiChu, d.TrangThai,
-                       s.TenSan, s.GiaTheoGio, s.HinhAnh, s.TrangThai AS TrangThaiSan,
-                       s.MaLoai, l.TenLoai
-                FROM   DatSan d
-                JOIN   SanBong s ON d.MaSan = s.MaSan
-                JOIN   LoaiSan l ON s.MaLoai = l.MaLoai
-                WHERE  d.MaND = @MaND
-                ORDER  BY d.NgayDat DESC, d.GioBatDau DESC";
-
-            return QueryList(sql,
-                cmd => cmd.Parameters.AddWithValue("@MaND", maND),
-                MapDatSan);
+                SELECT d.MaDatSan,d.MaND,d.MaSan,d.NgayDat,d.GioBatDau,d.GioKetThuc,
+                       d.TongTien,d.GhiChu,d.TrangThai,d.maSanCon,
+                       s.TenSan,s.GiaTheoGio,s.HinhAnh,s.TrangThai AS TrangThaiSan,s.MaLoai,l.TenLoai
+                FROM DatSan d
+                JOIN SanBong s  ON d.MaSan=s.MaSan
+                JOIN LoaiSan l  ON s.MaLoai=l.MaLoai
+                WHERE d.MaND=@MaND
+                ORDER BY d.NgayDat DESC,d.GioBatDau DESC";
+            return QueryList(sql, cmd => cmd.Parameters.AddWithValue("@MaND", maND), MapDatSan);
         }
 
         public List<DatSan> LayTatCaDatSan()
         {
             const string sql = @"
-                SELECT d.MaDatSan, d.MaND, d.MaSan, d.NgayDat, d.GioBatDau, d.GioKetThuc,
-                       d.TongTien, d.GhiChu, d.TrangThai,
-                       s.TenSan, s.GiaTheoGio, s.HinhAnh, s.TrangThai AS TrangThaiSan,
-                       s.MaLoai, l.TenLoai,
-                       nd.HoTen, nd.TaiKhoan
-                FROM   DatSan d
-                JOIN   SanBong s ON d.MaSan = s.MaSan
-                JOIN   LoaiSan l ON s.MaLoai = l.MaLoai
-                JOIN   NguoiDung nd ON d.MaND = nd.MaND
-                ORDER  BY d.NgayDat DESC, d.GioBatDau DESC";
-
+                SELECT d.MaDatSan,d.MaND,d.MaSan,d.NgayDat,d.GioBatDau,d.GioKetThuc,
+                       d.TongTien,d.GhiChu,d.TrangThai,d.maSanCon,
+                       s.TenSan,s.GiaTheoGio,s.HinhAnh,s.TrangThai AS TrangThaiSan,s.MaLoai,l.TenLoai,
+                       nd.HoTen,nd.TaiKhoan
+                FROM DatSan d
+                JOIN SanBong  s  ON d.MaSan=s.MaSan
+                JOIN LoaiSan  l  ON s.MaLoai=l.MaLoai
+                JOIN NguoiDung nd ON d.MaND=nd.MaND
+                ORDER BY d.NgayDat DESC,d.GioBatDau DESC";
             return QueryList(sql, null, r =>
             {
                 var ds = MapDatSan(r);
-                ds.NguoiDung = new NguoiDung
-                {
-                    HoTen = r["HoTen"].ToString(),
-                    TaiKhoan = r["TaiKhoan"].ToString()
-                };
+                ds.NguoiDung = new NguoiDung { HoTen = r["HoTen"].ToString(), TaiKhoan = r["TaiKhoan"].ToString() };
                 return ds;
             });
         }
@@ -334,78 +279,85 @@ namespace DATSANBONG.Data
         public DatSan LayDatSanTheoMa(int maDatSan)
         {
             const string sql = @"
-                SELECT d.MaDatSan, d.MaND, d.MaSan, d.NgayDat, d.GioBatDau, d.GioKetThuc,
-                       d.TongTien, d.GhiChu, d.TrangThai,
-                       s.TenSan, s.GiaTheoGio, s.HinhAnh, s.TrangThai AS TrangThaiSan,
-                       s.MaLoai, l.TenLoai
-                FROM   DatSan d
-                JOIN   SanBong s ON d.MaSan = s.MaSan
-                JOIN   LoaiSan l ON s.MaLoai = l.MaLoai
-                WHERE  d.MaDatSan = @MaDatSan";
-
+                SELECT d.MaDatSan,d.MaND,d.MaSan,d.NgayDat,d.GioBatDau,d.GioKetThuc,
+                       d.TongTien,d.GhiChu,d.TrangThai,d.maSanCon,
+                       s.TenSan,s.GiaTheoGio,s.HinhAnh,s.TrangThai AS TrangThaiSan,s.MaLoai,l.TenLoai
+                FROM DatSan d
+                JOIN SanBong s ON d.MaSan=s.MaSan
+                JOIN LoaiSan l ON s.MaLoai=l.MaLoai
+                WHERE d.MaDatSan=@MaDatSan";
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
             {
                 cmd.Parameters.AddWithValue("@MaDatSan", maDatSan);
                 conn.Open();
-                using (var r = cmd.ExecuteReader())
-                {
-                    if (r.Read()) return MapDatSan(r);
-                }
+                using (var r = cmd.ExecuteReader()) { if (r.Read()) return MapDatSan(r); }
             }
             return null;
         }
 
-        /// <summary>
-        /// Kiểm tra trùng lịch đặt sân có xét đến quan hệ phân cấp cụm sân (cha-con)
-        /// </summary>
         public bool KiemTraTrungLichPhanCap(int maSan, DateTime ngayDat, TimeSpan gioBatDau, TimeSpan gioKetThuc, int? maDatSanBoQua = null)
         {
-            // 1. Xác định danh sách ID của các sân liên quan (bản thân sân đó, sân cha nếu có, và các sân con nếu có)
             var relatedSanIds = new List<int> { maSan };
-            
             var san = LaySanBongTheoMa(maSan);
             if (san != null)
             {
-                // Nếu là sân con, thêm ID sân cha
-                if (san.MaSanCha.HasValue)
-                {
-                    relatedSanIds.Add(san.MaSanCha.Value);
-                }
-                
-                // Nếu là sân cha, tìm và thêm ID của tất cả sân con trực thuộc
-                var tatCaSan = LayDanhSachSanBong();
-                var sanConIds = tatCaSan.Where(s => s.MaSanCha == maSan).Select(s => s.MaSan).ToList();
-                relatedSanIds.AddRange(sanConIds);
+                if (san.MaSanCha.HasValue) relatedSanIds.Add(san.MaSanCha.Value);
+                relatedSanIds.AddRange(LayDanhSachSanBong().Where(s => s.MaSanCha == maSan).Select(s => s.MaSan));
             }
 
-            // 2. Lấy toàn bộ lịch đặt sân đang chờ duyệt hoặc đã duyệt của các sân liên quan trong ngày này
-            var existingBookings = LayTatCaDatSan()
-                .Where(d => d.MaSan.HasValue && 
-                            relatedSanIds.Contains(d.MaSan.Value) && 
-                            d.NgayDat.Date == ngayDat.Date && 
-                            d.TrangThai != "Đã hủy")
+            // FIX CS0029: d.MaSan là int?, dùng .HasValue + .Value
+            var bookings = LayTatCaDatSan()
+                .Where(d => d.MaSan.HasValue && relatedSanIds.Contains(d.MaSan.Value)
+                         && d.NgayDat.Date == ngayDat.Date && d.TrangThai != "Đã hủy")
                 .ToList();
 
             if (maDatSanBoQua.HasValue)
-            {
-                existingBookings = existingBookings.Where(d => d.MaDatSan != maDatSanBoQua.Value).ToList();
-            }
+                bookings = bookings.Where(d => d.MaDatSan != maDatSanBoQua.Value).ToList();
 
-            // 3. Kiểm tra xem có bất kỳ lịch đặt nào bị trùng lặp thời gian hay không
-            return existingBookings.Any(b => {
-                TimeSpan bEndCompare = (b.GioKetThuc.Hours == 23 && b.GioKetThuc.Minutes == 59) ? new TimeSpan(24, 0, 0) : b.GioKetThuc;
-                return b.GioBatDau < gioKetThuc && bEndCompare > gioBatDau;
+            return bookings.Any(b => {
+                TimeSpan bEnd = (b.GioKetThuc.Hours == 23 && b.GioKetThuc.Minutes == 59)
+                    ? new TimeSpan(24, 0, 0) : b.GioKetThuc;
+                return b.GioBatDau < gioKetThuc && bEnd > gioBatDau;
             });
         }
 
-        /// <summary>Cập nhật trạng thái đơn đặt sân</summary>
+        public bool KiemTraTrungLichSanCon(int maSan, string maSanCon, DateTime ngayDat,
+                                            TimeSpan gioBatDau, TimeSpan gioKetThuc,
+                                            int? maDatSanBoQua = null)
+        {
+            // FIX CS0029: d.MaSan là int?, so sánh với int maSan → dùng .HasValue + .Value
+            var bookings = LayTatCaDatSan()
+                .Where(d => d.MaSan.HasValue && d.MaSan.Value == maSan
+                         && string.Equals(d.MaSanCon, maSanCon, StringComparison.OrdinalIgnoreCase)
+                         && d.NgayDat.Date == ngayDat.Date
+                         && d.TrangThai != "Đã hủy")
+                .ToList();
+
+            if (maDatSanBoQua.HasValue)
+                bookings = bookings.Where(d => d.MaDatSan != maDatSanBoQua.Value).ToList();
+
+            return bookings.Any(b => {
+                TimeSpan bEnd = (b.GioKetThuc.Hours == 23 && b.GioKetThuc.Minutes == 59)
+                    ? new TimeSpan(24, 0, 0) : b.GioKetThuc;
+                return b.GioBatDau < gioKetThuc && bEnd > gioBatDau;
+            });
+        }
+
         public void CapNhatTrangThaiDatSan(int maDatSan, string trangThai)
         {
-            const string sql = "UPDATE DatSan SET TrangThai = @TrangThai WHERE MaDatSan = @MaDatSan";
-            ExecuteNonQuery(sql, cmd =>
+            ExecuteNonQuery("UPDATE DatSan SET TrangThai=@TrangThai WHERE MaDatSan=@MaDatSan", cmd =>
             {
                 cmd.Parameters.AddWithValue("@TrangThai", trangThai);
+                cmd.Parameters.AddWithValue("@MaDatSan", maDatSan);
+            });
+        }
+
+        public void CapNhatMaSanConChoDatSan(int maDatSan, string maSanCon)
+        {
+            ExecuteNonQuery("UPDATE DatSan SET maSanCon=@MaSanCon WHERE MaDatSan=@MaDatSan", cmd =>
+            {
+                cmd.Parameters.AddWithValue("@MaSanCon", (object)maSanCon ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@MaDatSan", maDatSan);
             });
         }
@@ -413,87 +365,55 @@ namespace DATSANBONG.Data
         // ─────────────────────────────────────────────────────────────
         //  THỐNG KÊ / DASHBOARD
         // ─────────────────────────────────────────────────────────────
-
-        public int DemTongDonDat() =>
-            (int)ExecuteScalar("SELECT COUNT(1) FROM DatSan");
+        public int DemTongDonDat() => (int)ExecuteScalar("SELECT COUNT(1) FROM DatSan");
 
         public decimal TinhTongDoanhThu() =>
-            (decimal)(ExecuteScalar("SELECT ISNULL(SUM(TongTien),0) FROM DatSan WHERE TrangThai = N'Đã duyệt'") ?? 0m);
+            (decimal)(ExecuteScalar("SELECT ISNULL(SUM(TongTien),0) FROM DatSan WHERE TrangThai=N'Đã duyệt'") ?? 0m);
 
         public int DemDonDatThang(int thang, int nam) =>
-            (int)ExecuteScalar(
-                "SELECT COUNT(1) FROM DatSan WHERE MONTH(NgayDat)=@Thang AND YEAR(NgayDat)=@Nam",
-                cmd =>
-                {
-                    cmd.Parameters.AddWithValue("@Thang", thang);
-                    cmd.Parameters.AddWithValue("@Nam", nam);
-                });
+            (int)ExecuteScalar("SELECT COUNT(1) FROM DatSan WHERE MONTH(NgayDat)=@Thang AND YEAR(NgayDat)=@Nam",
+                cmd => { cmd.Parameters.AddWithValue("@Thang", thang); cmd.Parameters.AddWithValue("@Nam", nam); });
 
         public decimal TinhDoanhThuThang(int thang, int nam) =>
-            (decimal)(ExecuteScalar(
-                "SELECT ISNULL(SUM(TongTien),0) FROM DatSan WHERE TrangThai=N'Đã duyệt' AND MONTH(NgayDat)=@Thang AND YEAR(NgayDat)=@Nam",
-                cmd =>
-                {
-                    cmd.Parameters.AddWithValue("@Thang", thang);
-                    cmd.Parameters.AddWithValue("@Nam", nam);
-                }) ?? 0m);
+            (decimal)(ExecuteScalar("SELECT ISNULL(SUM(TongTien),0) FROM DatSan WHERE TrangThai=N'Đã duyệt' AND MONTH(NgayDat)=@Thang AND YEAR(NgayDat)=@Nam",
+                cmd => { cmd.Parameters.AddWithValue("@Thang", thang); cmd.Parameters.AddWithValue("@Nam", nam); }) ?? 0m);
 
         // ─────────────────────────────────────────────────────────────
         //  CHỦ SÂN
         // ─────────────────────────────────────────────────────────────
-
-        /// <summary>Lấy danh sách người dùng theo VaiTro (vd: "Chủ sân", "Khách hàng")</summary>
         public List<NguoiDung> LayDanhSachNguoiDungTheoVaiTro(string vaiTro)
         {
-            const string sql = @"
-                SELECT MaND, HoTen, TaiKhoan, MatKhau, SoDienThoai, VaiTro
-                FROM   NguoiDung
-                WHERE  VaiTro = @VaiTro
-                ORDER  BY MaND";
-
-            return QueryList(sql,
-                cmd => cmd.Parameters.AddWithValue("@VaiTro", vaiTro),
-                MapNguoiDung);
+            const string sql = "SELECT MaND,HoTen,TaiKhoan,MatKhau,SoDienThoai,VaiTro FROM NguoiDung WHERE VaiTro=@VaiTro ORDER BY MaND";
+            return QueryList(sql, cmd => cmd.Parameters.AddWithValue("@VaiTro", vaiTro), MapNguoiDung);
         }
 
-        /// <summary>Cập nhật VaiTro của một người dùng</summary>
         public void CapNhatVaiTro(int maND, string vaiTro)
         {
-            const string sql = "UPDATE NguoiDung SET VaiTro = @VaiTro WHERE MaND = @MaND";
-            ExecuteNonQuery(sql, cmd =>
+            ExecuteNonQuery("UPDATE NguoiDung SET VaiTro=@VaiTro WHERE MaND=@MaND", cmd =>
             {
                 cmd.Parameters.AddWithValue("@VaiTro", vaiTro);
                 cmd.Parameters.AddWithValue("@MaND", maND);
             });
         }
 
-        /// <summary>Gán MaChuSan cho sân bóng (phân công chủ sân quản lý sân)</summary>
         public void PhanCongSanChoChuSan(int maND, int maSan)
         {
-            const string sql = "UPDATE SanBong SET MaChuSan = @MaND WHERE MaSan = @MaSan";
-            ExecuteNonQuery(sql, cmd =>
+            ExecuteNonQuery("UPDATE SanBong SET MaChuSan=@MaND WHERE MaSan=@MaSan", cmd =>
             {
                 cmd.Parameters.AddWithValue("@MaND", maND);
                 cmd.Parameters.AddWithValue("@MaSan", maSan);
             });
         }
 
-        /// <summary>Gỡ chủ sân khỏi tất cả sân đang phân công</summary>
         public void GoChuSanKhoiTatCaSan(int maND)
         {
-            const string sql = "UPDATE SanBong SET MaChuSan = NULL WHERE MaChuSan = @MaND";
-            ExecuteNonQuery(sql, cmd => cmd.Parameters.AddWithValue("@MaND", maND));
+            ExecuteNonQuery("UPDATE SanBong SET MaChuSan=NULL WHERE MaChuSan=@MaND",
+                cmd => cmd.Parameters.AddWithValue("@MaND", maND));
         }
 
-        /// <summary>Lấy map MaND → danh sách TenSan đang phân công cho chủ sân</summary>
         public Dictionary<int, List<string>> LaySanCuaTungChuSan()
         {
-            const string sql = @"
-                SELECT MaChuSan, TenSan
-                FROM   SanBong
-                WHERE  MaChuSan IS NOT NULL
-                ORDER  BY MaChuSan, TenSan";
-
+            const string sql = "SELECT MaChuSan,TenSan FROM SanBong WHERE MaChuSan IS NOT NULL ORDER BY MaChuSan,TenSan";
             var result = new Dictionary<int, List<string>>();
             using (var conn = GetConnection())
             using (var cmd = new SqlCommand(sql, conn))
@@ -505,8 +425,7 @@ namespace DATSANBONG.Data
                     {
                         int maND = (int)r["MaChuSan"];
                         string ten = r["TenSan"].ToString();
-                        if (!result.ContainsKey(maND))
-                            result[maND] = new List<string>();
+                        if (!result.ContainsKey(maND)) result[maND] = new List<string>();
                         result[maND].Add(ten);
                     }
                 }
@@ -515,9 +434,35 @@ namespace DATSANBONG.Data
         }
 
         // ─────────────────────────────────────────────────────────────
+        //  SÂN CON
+        // ─────────────────────────────────────────────────────────────
+        public List<SanCon> LaySanConTheoMaSan(int maSan)
+        {
+            const string sql = "SELECT MaSanCon,MaSan,TenSanCon,TrangThai FROM SanCon WHERE MaSan=@MaSan AND TrangThai=1";
+            var list = new List<SanCon>();
+            using (var conn = new SqlConnection(_connectionString))
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                cmd.Parameters.AddWithValue("@MaSan", maSan);
+                conn.Open();
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                        list.Add(new SanCon
+                        {
+                            MaSanCon = (int)r["MaSanCon"],
+                            MaSan = (int)r["MaSan"],
+                            TenSanCon = r["TenSanCon"].ToString(),
+                            TrangThai = (bool)r["TrangThai"]
+                        });
+                }
+            }
+            return list;
+        }
+
+        // ─────────────────────────────────────────────────────────────
         //  PRIVATE HELPERS
         // ─────────────────────────────────────────────────────────────
-
         private List<T> QueryList<T>(string sql, Action<SqlCommand> paramSetter, Func<SqlDataReader, T> mapper)
         {
             var list = new List<T>();
@@ -526,8 +471,7 @@ namespace DATSANBONG.Data
             {
                 paramSetter?.Invoke(cmd);
                 conn.Open();
-                using (var r = cmd.ExecuteReader())
-                    while (r.Read()) list.Add(mapper(r));
+                using (var r = cmd.ExecuteReader()) while (r.Read()) list.Add(mapper(r));
             }
             return list;
         }
@@ -557,56 +501,57 @@ namespace DATSANBONG.Data
         // ─────────────────────────────────────────────────────────────
         //  MAPPERS
         // ─────────────────────────────────────────────────────────────
-
-        private static NguoiDung MapNguoiDung(SqlDataReader r)
+        private static NguoiDung MapNguoiDung(SqlDataReader r) => new NguoiDung
         {
-            var nd = new NguoiDung();
-            nd.MaND = (int)r["MaND"];
-            nd.HoTen = r["HoTen"].ToString();
-            nd.TaiKhoan = r["TaiKhoan"].ToString();
-            nd.MatKhau = r["MatKhau"].ToString();
-            nd.SoDienThoai = r["SoDienThoai"] == DBNull.Value ? null : r["SoDienThoai"].ToString();
-            nd.VaiTro = r["VaiTro"] == DBNull.Value ? "Khách hàng" : r["VaiTro"].ToString();
-            return nd;
-        }
+            MaND = (int)r["MaND"],
+            HoTen = r["HoTen"].ToString(),
+            TaiKhoan = r["TaiKhoan"].ToString(),
+            MatKhau = r["MatKhau"].ToString(),
+            SoDienThoai = r["SoDienThoai"] == DBNull.Value ? null : r["SoDienThoai"].ToString(),
+            VaiTro = r["VaiTro"] == DBNull.Value ? "Khách hàng" : r["VaiTro"].ToString()
+        };
 
         private static SanBong MapSanBong(SqlDataReader r)
         {
-            var san = new SanBong();
-            san.MaSan = (int)r["MaSan"];
-            san.TenSan = r["TenSan"].ToString();
-            san.MaLoai = (int?)r["MaLoai"];
-            san.GiaTheoGio = (decimal)r["GiaTheoGio"];
-            san.HinhAnh = r["HinhAnh"] == DBNull.Value ? null : r["HinhAnh"].ToString();
-            san.TrangThai = r["TrangThai"] == DBNull.Value ? "Hoạt động" : r["TrangThai"].ToString();
-            
-            // Đọc trường MaSanCha
-            // Để tránh lỗi nếu câu SELECT không chứa MaSanCha (đề phòng trường hợp query ngoài map)
+            var san = new SanBong
+            {
+                MaSan = (int)r["MaSan"],
+                TenSan = r["TenSan"].ToString(),
+                MaLoai = (int?)r["MaLoai"],
+                GiaTheoGio = (decimal)r["GiaTheoGio"],
+                HinhAnh = r["HinhAnh"] == DBNull.Value ? null : r["HinhAnh"].ToString(),
+                TrangThai = r["TrangThai"] == DBNull.Value ? "Hoạt động" : r["TrangThai"].ToString()
+            };
             try
             {
-                int ordinal = r.GetOrdinal("MaSanCha");
-                san.MaSanCha = r.IsDBNull(ordinal) ? (int?)null : r.GetInt32(ordinal);
+                int ord = r.GetOrdinal("MaSanCha");
+                san.MaSanCha = r.IsDBNull(ord) ? (int?)null : r.GetInt32(ord);
             }
-            catch (IndexOutOfRangeException)
-            {
-                san.MaSanCha = null;
-            }
-
+            catch (IndexOutOfRangeException) { san.MaSanCha = null; }
             return san;
         }
 
         private static DatSan MapDatSan(SqlDataReader r)
         {
-            var ds = new DatSan();
-            ds.MaDatSan = (int)r["MaDatSan"];
-            ds.MaND = (int?)r["MaND"];
-            ds.MaSan = (int?)r["MaSan"];
-            ds.NgayDat = (DateTime)r["NgayDat"];
-            ds.GioBatDau = (TimeSpan)r["GioBatDau"];
-            ds.GioKetThuc = (TimeSpan)r["GioKetThuc"];
-            ds.TongTien = r["TongTien"] == DBNull.Value ? (decimal?)null : (decimal)r["TongTien"];
-            ds.GhiChu = r["GhiChu"] == DBNull.Value ? null : r["GhiChu"].ToString();
-            ds.TrangThai = r["TrangThai"] == DBNull.Value ? "Chờ duyệt" : r["TrangThai"].ToString();
+            var ds = new DatSan
+            {
+                MaDatSan = (int)r["MaDatSan"],
+                MaND = (int?)r["MaND"],
+                MaSan = (int?)r["MaSan"],
+                NgayDat = (DateTime)r["NgayDat"],
+                GioBatDau = (TimeSpan)r["GioBatDau"],
+                GioKetThuc = (TimeSpan)r["GioKetThuc"],
+                TongTien = r["TongTien"] == DBNull.Value ? (decimal?)null : (decimal)r["TongTien"],
+                GhiChu = r["GhiChu"] == DBNull.Value ? null : r["GhiChu"].ToString(),
+                TrangThai = r["TrangThai"] == DBNull.Value ? "Chờ duyệt" : r["TrangThai"].ToString()
+            };
+            // FIX CS0029: MaSanCon là string → dùng GetString thay vì GetInt32
+            try
+            {
+                int ord = r.GetOrdinal("maSanCon");
+                ds.MaSanCon = r.IsDBNull(ord) ? null : r.GetString(ord);
+            }
+            catch (IndexOutOfRangeException) { ds.MaSanCon = null; }
             return ds;
         }
     }

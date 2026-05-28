@@ -1,4 +1,4 @@
-@model DATSANBONG.Models.DatSanFormViewModel
+﻿@model DATSANBONG.Models.DatSanFormViewModel
 
 @{
     ViewBag.Title = "Đặt sân - " + Model.TenSan;
@@ -7,7 +7,6 @@
 
 <section class="dsb-section min-vh-100 text-white py-5">
     <div class="container">
-        <!-- Breadcrumb -->
         <div class="mb-4">
             <a href="@Url.Action("Detail", "SanBong", new { id = Model.MaSan })" class="text-success text-decoration-none fw-bold">
                 <i class="bi bi-arrow-left me-1"></i> Quay lại chi tiết sân
@@ -15,15 +14,14 @@
         </div>
 
         <div class="row g-4">
-            <!-- Cột bên trái: col-lg-5 chứa cả "Thông tin sân" và "Form đặt sân" -->
             <div class="col-lg-5 d-flex flex-column gap-4">
-                
-                <!-- Panel 1: Thông tin sân bóng (Readonly preview) -->
+
+                <!-- Panel 1: Thong tin san bong -->
                 <div class="bg-dark p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg">
                     <h3 class="fw-bold mb-3 text-white fs-5">
                         <i class="bi bi-info-circle text-success me-2"></i>Thông Tin Sân Bóng
                     </h3>
-                    <div class="rounded-3 overflow-hidden mb-3" style="width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #1c2128;">
+                    <div class="rounded-3 overflow-hidden mb-3" style="width: 100%; aspect-ratio: 16/9; background: #1c2128;">
                         @if (string.IsNullOrEmpty(Model.HinhAnh))
                         {
                             <img src="~/Content/Images/default-field.jpg" class="w-100 h-100 object-fit-cover" alt="@Model.TenSan" />
@@ -49,7 +47,7 @@
                     </div>
                 </div>
 
-                <!-- Panel 2: Form đặt sân -->
+                <!-- Panel 2: Form dat san -->
                 <div class="bg-dark p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg">
                     <h3 class="fw-bold mb-3 text-white fs-5">
                         <i class="bi bi-calendar-plus text-success me-2"></i>Thông Tin Đặt Sân
@@ -60,22 +58,22 @@
                         @Html.AntiForgeryToken()
                         @Html.HiddenFor(m => m.MaSan)
                         @Html.HiddenFor(m => m.GiaTheoGio, new { id = "GiaTheoGio" })
-
                         @Html.ValidationSummary(true, "", new { @class = "alert alert-danger shadow-sm border-0 small text-white bg-danger bg-opacity-25" })
 
-                        <!-- Ngày đặt -->
+                        <!-- Ngày dat -->
                         <div class="mb-3">
                             <label class="form-label text-white-50 small fw-bold">Ngày đặt sân</label>
-                            @Html.TextBoxFor(m => m.NgayDat, "{0:yyyy-MM-dd}", new { 
-                                @class = "form-control bg-dark text-white border-secondary shadow-none py-2", 
-                                type = "date", 
+                            @Html.TextBoxFor(m => m.NgayDat, "{0:yyyy-MM-dd}", new
+                            {
+                                @class = "form-control bg-dark text-white border-secondary shadow-none py-2",
+                                type = "date",
                                 min = DateTime.Today.ToString("yyyy-MM-dd"),
                                 id = "NgayDat"
                             })
                             @Html.ValidationMessageFor(m => m.NgayDat, "", new { @class = "text-danger small mt-1 d-block" })
                         </div>
 
-                        <!-- Giờ bắt đầu & Giờ kết thúc (Dropdowns) -->
+                        <!-- Giờ bắt đầu & ket thuc -->
                         <div class="row g-3 mb-3">
                             <div class="col-sm-6">
                                 <label class="form-label text-white-50 small fw-bold">Giờ bắt đầu</label>
@@ -101,19 +99,68 @@
                             </div>
                         </div>
 
-                        <!-- Ghi chú -->
+                        <!-- CHON SAN CON -->
+                        if (Model.DanhSachSanCon != null && Model.DanhSachSanCon.Count > 0)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label text-white-50 small fw-bold">
+                                    <i class="bi bi-diagram-3 text-success me-1"></i>Chọn sân con
+                                </label>
+                                <div class="sancon-grid">
+                                    @foreach (var sc in Model.DanhSachSanCon)
+                                    {
+                                        bool isChecked = (Model.TenSanCon == sc.TenSanCon);
+                                        <div class="sancon-item">
+                                            @if (isChecked)
+                                            {
+                                                <input type="radio" name="TenSanCon" id="sancon_@sc.TenSanCon" value="@sc.TenSanCon" class="sancon-radio" checked="checked" />
+                                            }
+                                            else
+                                            {
+                                                <input type="radio" name="TenSanCon" id="sancon_@sc.TenSanCon" value="@sc.TenSanCon" class="sancon-radio" />
+                                            }
+                                            <label for="sancon_@sc.TenSanCon" class="sancon-label">
+                                                <i class="bi bi-geo-fill me-1"></i>@sc.TenSanCon
+                                            </label>
+                                        </div>
+                                    }
+                                    @{
+                                        bool isNoneChecked = string.IsNullOrEmpty(Model.TenSanCon);
+                                    }
+                                    <div class="sancon-item">
+                                        @if (isNoneChecked)
+                                        {
+                                            <input type="radio" name="TenSanCon" id="sancon_none" value="" class="sancon-radio" checked="checked" />
+                                        }
+                                        else
+                                        {
+                                            <input type="radio" name="TenSanCon" id="sancon_none" value="" class="sancon-radio" />
+                                        }
+                                        <label for="sancon_none" class="sancon-label sancon-none">
+                                            <i class="bi bi-x-circle me-1"></i>Không chọn
+                                        </label>
+                                    </div>
+                                </div>
+                                <small class="text-white-50 mt-2 d-block">
+                                    <i class="bi bi-info-circle me-1 text-info"></i>Chọn sân con nếu muốn đặt riêng một khu vực.
+                                </small>
+                            </div>
+                        }
+
+                        <!-- Ghi chu -->
                         <div class="mb-4">
                             <label class="form-label text-white-50 small fw-bold">Ghi chú thêm</label>
-                            @Html.TextAreaFor(m => m.GhiChu, new { 
-                                @class = "form-control bg-dark text-white border-secondary shadow-none", 
-                                placeholder = "Ví dụ: Yêu cầu trọng tài, thuê thêm áo tập, nước...", 
+                            @Html.TextAreaFor(m => m.GhiChu, new
+                            {
+                                @class = "form-control bg-dark text-white border-secondary shadow-none",
+                                placeholder = "Ví dụ: Yêu cầu trọng tài, thuê thêm áo tập, nước...",
                                 rows = "2",
                                 id = "GhiChu"
                             })
                             @Html.ValidationMessageFor(m => m.GhiChu, "", new { @class = "text-danger small mt-1 d-block" })
                         </div>
 
-                        <!-- Price Preview Section -->
+                        <!-- Tổng tiền dự kiến -->
                         <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 mb-4 d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="d-block text-white-50 small">Tổng tiền dự kiến</span>
@@ -124,7 +171,6 @@
                             </div>
                         </div>
 
-                        <!-- Submit Button -->
                         <button type="submit" id="btn-submit" class="btn btn-success btn-lg w-100 fw-bold py-3" style="background-color: var(--clr-primary, #16a34a); border-color: var(--clr-primary, #16a34a);">
                             <i class="bi bi-calendar-check me-2"></i>Xác nhận đặt sân
                         </button>
@@ -132,7 +178,7 @@
                 </div>
             </div>
 
-            <!-- Cột bên phải: col-lg-7 hiển thị Lịch biểu FullCalendar trực quan -->
+            <!-- Cot ben phai: FullCalendar -->
             <div class="col-lg-7">
                 <div class="bg-dark p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg h-100 d-flex flex-column">
                     <h3 class="fw-bold mb-2 text-white fs-5">
@@ -141,8 +187,6 @@
                     <p class="text-white-50 small mb-3">
                         <i class="bi bi-info-circle me-1 text-info"></i>Các ô màu đỏ biểu thị khung giờ <strong>đã bị đặt</strong>. Bạn có thể <strong>kéo chọn</strong> hoặc <strong>click chọn ô trống</strong> để tự động điền nhanh ngày/giờ vào form đặt.
                     </p>
-
-                    <!-- Khay lịch -->
                     <div id="calendar-container" class="position-relative" style="min-height: 500px;">
                         <div id="calendar"></div>
                     </div>
@@ -152,35 +196,40 @@
     </div>
 </section>
 
-<!-- CSS Tinh chỉnh giao diện FullCalendar theo tông màu tối cực kỳ hiện đại -->
 <style>
     #calendar {
         background-color: #1a1f26;
         border-radius: 12px;
         padding: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255,255,255,0.07);
         color: #fff;
         font-family: inherit;
     }
+
     .fc-theme-standard td, .fc-theme-standard th {
-        border-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255,255,255,0.08) !important;
     }
+
     .fc-theme-standard .fc-scrollgrid {
-        border-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255,255,255,0.08) !important;
     }
+
     .fc .fc-col-header-cell-cushion {
         color: #fff;
         font-weight: 600;
         text-decoration: none;
         font-size: 13px;
     }
+
     .fc .fc-timegrid-slot-label-cushion {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(255,255,255,0.6);
         font-size: 11px;
     }
+
     .fc .fc-timegrid-axis-cushion {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(255,255,255,0.6);
     }
+
     .fc .fc-button-primary {
         background-color: #16a34a !important;
         border-color: #16a34a !important;
@@ -191,171 +240,161 @@
         padding: 4px 8px;
         text-transform: capitalize;
     }
-    .fc .fc-button-primary:hover {
-        background-color: #15803d !important;
-        border-color: #15803d !important;
-        transform: translateY(-1px);
-    }
-    .fc .fc-button-primary:disabled {
-        background-color: #374151 !important;
-        border-color: #374151 !important;
-    }
+
+        .fc .fc-button-primary:hover {
+            background-color: #15803d !important;
+            border-color: #15803d !important;
+            transform: translateY(-1px);
+        }
+
+        .fc .fc-button-primary:disabled {
+            background-color: #374151 !important;
+            border-color: #374151 !important;
+        }
+
     .fc .fc-toolbar-title {
         font-size: 14px !important;
         font-weight: bold;
         color: #fff;
     }
+
     .fc-event {
         border-radius: 6px !important;
         padding: 2px 4px !important;
         font-size: 11px !important;
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
+
     .fc-header-toolbar {
         margin-bottom: 12px !important;
+    }
+
+    .sancon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .sancon-radio {
+        display: none;
+    }
+
+    .sancon-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 6px;
+        border-radius: 8px;
+        border: 1.5px solid rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.65);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        text-align: center;
+        user-select: none;
+    }
+
+        .sancon-label:hover {
+            border-color: #16a34a;
+            color: #fff;
+            background: rgba(22,163,74,0.12);
+        }
+
+    .sancon-radio:checked + .sancon-label {
+        border-color: #16a34a;
+        background: rgba(22,163,74,0.22);
+        color: #4ade80;
+        box-shadow: 0 0 0 2px rgba(22,163,74,0.3);
+    }
+
+    .sancon-none {
+        border-style: dashed;
+        color: rgba(255,255,255,0.35);
+    }
+
+    .sancon-radio:checked + .sancon-none {
+        border-color: #6b7280;
+        background: rgba(107,114,128,0.15);
+        color: #9ca3af;
+        box-shadow: 0 0 0 2px rgba(107,114,128,0.25);
     }
 </style>
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
-
-    <!-- 1. Nhúng thư viện FullCalendar (Bản CDN JS UMD bao gồm tất cả view) -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-
     <script>
         $(document).ready(function () {
-            // Hàm tính toán và cập nhật tổng tiền
             function updateTongTien() {
                 var startVal = $('#GioBatDau').val();
                 var endVal = $('#GioKetThuc').val();
                 var gia = parseFloat($('#GiaTheoGio').val());
-
                 if (startVal && endVal && !isNaN(gia)) {
                     var startHour = parseInt(startVal.split(':')[0], 10);
                     var endHour = parseInt(endVal.split(':')[0], 10);
-
                     if (endHour <= startHour) {
                         $('#preview-tongtien').text('0 ₫');
                         $('#hour-calculation').text('Giờ kết thúc phải lớn hơn giờ bắt đầu');
                         $('#btn-submit').prop('disabled', true);
                         return;
                     }
-
                     var durationHours = endHour - startHour;
                     var tongTien = durationHours * gia;
-
                     $('#hour-calculation').text(durationHours + ' giờ chơi');
                     $('#preview-tongtien').text(tongTien.toLocaleString('vi-VN') + ' ₫');
                     $('#btn-submit').prop('disabled', false);
                 }
             }
 
-            // Gọi lần đầu khi tải trang
             updateTongTien();
+            $('#GioBatDau, #GioKetThuc').on('change', function () { updateTongTien(); });
 
-            // Lắng nghe sự kiện thay đổi giờ chơi trên Form
-            $('#GioBatDau, #GioKetThuc').on('change', function () {
-                updateTongTien();
-            });
-
-            // 2. Khởi tạo FullCalendar trực quan (timeGridWeek)
             var calendarEl = document.getElementById('calendar');
             var maSan = @Model.MaSan;
 
             var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'timeGridWeek', // Hiển thị theo dạng tuần
-                locale: 'vi',               // Ngôn ngữ Tiếng Việt
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'timeGridWeek,timeGridDay'
-                },
-                buttonText: {
-                    today: 'Hôm nay',
-                    week: 'Tuần',
-                    day: 'Ngày'
-                },
-                slotDuration: '01:00:00',   // Chia mốc giờ 1 tiếng
-                slotMinTime: '05:00:00',    // Giờ bắt đầu hoạt động của sân (5h sáng)
-                slotMaxTime: '24:00:00',    // Giờ đóng cửa (12h đêm)
-                allDaySlot: false,          // Tắt ô hiển thị cả ngày
-                expandRows: true,           // Kéo dãn các dòng cho cân xứng
-                height: 520,                // Chiều cao tối đa của lịch
-                selectable: true,           // Cho phép chọn trực tiếp
+                initialView: 'timeGridWeek',
+                locale: 'vi',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,timeGridDay' },
+                buttonText: { today: 'Hôm nay', week: 'Tuần', day: 'Ngày' },
+                slotDuration: '01:00:00',
+                slotMinTime: '05:00:00',
+                slotMaxTime: '24:00:00',
+                allDaySlot: false,
+                expandRows: true,
+                height: 520,
+                selectable: true,
                 selectMirror: true,
                 unselectAuto: true,
-                firstDay: 1,                // Ngày bắt đầu tuần là Thứ Hai
-                slotEventOverlap: false,    // Không cho phép các lịch đặt đè lên nhau
-
-                // 3. Tải danh sách lịch đặt sân thông qua Ajax (VẤN ĐỀ 2)
+                firstDay: 1,
+                slotEventOverlap: false,
                 events: function(info, successCallback, failureCallback) {
-                    var startStr = info.start.toISOString().split('T')[0];
-                    var endStr = info.end.toISOString().split('T')[0];
-                    
                     $.ajax({
                         url: '/DatSan/GetLichSanBong',
                         type: 'GET',
                         dataType: 'json',
-                        data: {
-                            maSan: maSan,
-                            start: startStr, // FullCalendar tự sinh start/end của tuần hiện tại
-                            end: endStr
-                        },
-                        success: function(data) {
-                            successCallback(data);
-                        },
-                        error: function(err) {
-                            console.error('Lỗi khi tải lịch đặt sân bóng:', err);
-                            failureCallback(err);
-                        }
+                        data: { maSan: maSan, start: info.start.toISOString().split('T')[0], end: info.end.toISOString().split('T')[0] },
+                        success: function(data) { successCallback(data); },
+                        error: function(err) { console.error('Lỗi tải lịch:', err); failureCallback(err); }
                     });
                 },
-
-                // Chỉ cho phép chọn khung giờ lớn hơn hoặc bằng thời điểm hiện tại
-                selectAllow: function(selectInfo) {
-                    return selectInfo.start >= new Date();
-                },
-
-                // 4. Khi click chọn ô giờ trống -> Điền nhanh thông tin vào form
+                selectAllow: function(selectInfo) { return selectInfo.start >= new Date(); },
                 select: function(info) {
                     var startDate = info.start;
                     var endDate = info.end;
-
-                    // Không cho phép chọn quá 12 tiếng trong 1 đơn
-                    var durationHours = (endDate - startDate) / 3600000;
-                    if (durationHours > 12) {
-                        calendar.unselect();
-                        return;
-                    }
-
-                    // Chuyển đổi định dạng ngày: YYYY-MM-DD
-                    var year = startDate.getFullYear();
-                    var month = String(startDate.getMonth() + 1).padStart(2, '0');
-                    var day = String(startDate.getDate()).padStart(2, '0');
-                    var dateStr = `${year}-${month}-${day}`;
-
-                    // Chuyển đổi định dạng giờ: HH:00
-                    var startHour = String(startDate.getHours()).padStart(2, '0') + ":00";
-                    var endHour = String(endDate.getHours()).padStart(2, '0') + ":00";
-
-                    // Điền thông tin vào form
+                    if ((endDate - startDate) / 3600000 > 12) { calendar.unselect(); return; }
+                    var dateStr = startDate.getFullYear() + '-' + String(startDate.getMonth()+1).padStart(2,'0') + '-' + String(startDate.getDate()).padStart(2,'0');
+                    var startHour = String(startDate.getHours()).padStart(2,'0') + ":00";
+                    var endHour = String(endDate.getHours()).padStart(2,'0') + ":00";
                     $('#NgayDat').val(dateStr);
-                    
-                    if ($(`#GioBatDau option[value="${startHour}"]`).length > 0) {
-                        $('#GioBatDau').val(startHour);
-                    }
-                    if ($(`#GioKetThuc option[value="${endHour}"]`).length > 0) {
-                        $('#GioKetThuc').val(endHour);
-                    }
-                    
-                    // Cập nhật lại tổng tiền hiển thị
+                    if ($('#GioBatDau option[value="' + startHour + '"]').length > 0) $('#GioBatDau').val(startHour);
+                    if ($('#GioKetThuc option[value="' + endHour + '"]').length > 0) $('#GioKetThuc').val(endHour);
                     updateTongTien();
                     calendar.unselect();
-
-                    // Cuộn nhẹ màn hình về phía Form đặt sân để khách hàng xác nhận
-                    $('html, body').animate({
-                        scrollTop: $('#bookingForm').offset().top - 80
-                    }, 400);
+                    $('html, body').animate({ scrollTop: $('#bookingForm').offset().top - 80 }, 400);
                 }
             });
 

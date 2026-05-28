@@ -1,19 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><Database Name="QuanLySanBong_MVC" Class="DataClasses1DataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Table Name="dbo.DatSan" Member="DatSans">
-    <Type Name="DatSan">
-      <Column Name="MaDatSan" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="MaND" Type="System.Int32" DbType="Int" CanBeNull="true" />
-      <Column Name="MaSan" Type="System.Int32" DbType="Int" CanBeNull="true" />
-      <Column Name="NgayDat" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
-      <Column Name="GioBatDau" Type="System.TimeSpan" DbType="Time NOT NULL" CanBeNull="false" />
-      <Column Name="GioKetThuc" Type="System.TimeSpan" DbType="Time NOT NULL" CanBeNull="false" />
-      <Column Name="TongTien" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
-      <Column Name="GhiChu" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
-      <Column Name="TrangThai" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
-      <Association Name="NguoiDung_DatSan" Member="NguoiDung" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
-      <Association Name="SanBong_DatSan" Member="SanBong" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
-    </Type>
-  </Table>
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="QuanLySanBong_MVC" Class="DataClasses1DataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
   <Table Name="dbo.LoaiSan" Member="LoaiSans">
     <Type Name="LoaiSan">
       <Column Name="MaLoai" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -31,6 +16,14 @@
       <Column Name="SoDienThoai" Type="System.String" DbType="VarChar(15)" CanBeNull="true" />
       <Column Name="VaiTro" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
       <Association Name="NguoiDung_DatSan" Member="DatSans" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
+      <Association Name="NguoiDung_DatSan1" Member="DatSans1" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
+      <Association Name="NguoiDung_DatSan2" Member="DatSans2" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
+      <Association Name="NguoiDung_DatSan3" Member="DatSans3" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
+      <Association Name="NguoiDung_DatSan4" Member="DatSans4" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
+      <Association Name="NguoiDung_DatSan5" Member="DatSans5" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
+      <Association Name="NguoiDung_DatSan6" Member="DatSans6" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
+      <Association Name="NguoiDung_DatSan7" Member="DatSans7" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
+      <Association Name="NguoiDung_DatSan8" Member="DatSans8" ThisKey="MaND" OtherKey="MaND" Type="DatSan" />
     </Type>
   </Table>
   <Table Name="dbo.SanBong" Member="SanBongs">
@@ -44,7 +37,59 @@
       <Column Name="MaChuSan" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Column Name="MaSanCha" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Association Name="SanBong_DatSan" Member="DatSans" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_DatSan1" Member="DatSans1" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_DatSan2" Member="DatSans2" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_DatSan3" Member="DatSans3" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_DatSan4" Member="DatSans4" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_DatSan5" Member="DatSans5" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_DatSan6" Member="DatSans6" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_DatSan7" Member="DatSans7" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_DatSan8" Member="DatSans8" ThisKey="MaSan" OtherKey="MaSan" Type="DatSan" />
+      <Association Name="SanBong_SanCon" Member="SanCons" ThisKey="MaSan" OtherKey="MaSan" Type="SanCon" />
       <Association Name="LoaiSan_SanBong" Member="LoaiSan" ThisKey="MaLoai" OtherKey="MaLoai" Type="LoaiSan" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.DatSan" Member="DatSans">
+    <Type Name="DatSan">
+      <Column Name="MaDatSan" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="MaND" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MaSan" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="NgayDat" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
+      <Column Name="GioBatDau" Type="System.TimeSpan" DbType="Time NOT NULL" CanBeNull="false" />
+      <Column Name="GioKetThuc" Type="System.TimeSpan" DbType="Time NOT NULL" CanBeNull="false" />
+      <Column Name="TongTien" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="GhiChu" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Column Name="TrangThai" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="MaSanCon" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Association Name="NguoiDung_DatSan" Member="NguoiDung" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="NguoiDung_DatSan1" Member="NguoiDung1" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="NguoiDung_DatSan2" Member="NguoiDung2" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="NguoiDung_DatSan3" Member="NguoiDung3" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="NguoiDung_DatSan4" Member="NguoiDung4" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="NguoiDung_DatSan5" Member="NguoiDung5" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="NguoiDung_DatSan6" Member="NguoiDung6" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="NguoiDung_DatSan7" Member="NguoiDung7" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="NguoiDung_DatSan8" Member="NguoiDung8" ThisKey="MaND" OtherKey="MaND" Type="NguoiDung" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan" Member="SanBong" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan1" Member="SanBong1" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan2" Member="SanBong2" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan3" Member="SanBong3" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan4" Member="SanBong4" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan5" Member="SanBong5" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan6" Member="SanBong6" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan7" Member="SanBong7" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanBong_DatSan8" Member="SanBong8" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
+      <Association Name="SanCon_DatSan" Member="SanCon" ThisKey="MaSanCon" OtherKey="MaSanCon" Type="SanCon" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.SanCon" Member="SanCons">
+    <Type Name="SanCon">
+      <Column Name="MaSanCon" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="MaSan" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TenSanCon" Type="System.String" DbType="NVarChar(10) NOT NULL" CanBeNull="false" />
+      <Column Name="TrangThai" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Association Name="SanCon_DatSan" Member="DatSans" ThisKey="MaSanCon" OtherKey="MaSanCon" Type="DatSan" />
+      <Association Name="SanBong_SanCon" Member="SanBong" ThisKey="MaSan" OtherKey="MaSan" Type="SanBong" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>

@@ -309,18 +309,49 @@ namespace DATSANBONG.Controllers
             // Kiểm tra trùng lịch trước khi duyệt
             if (datSan.MaSan.HasValue)
             {
-                bool isOverlapped = _dbSB.KiemTraTrungLichPhanCap(datSan.MaSan.Value, datSan.NgayDat, datSan.GioBatDau, datSan.GioKetThuc, datSan.MaDatSan);
-                if (isOverlapped)
+                bool isOverlapped;
+
+                if (!string.IsNullOrEmpty(datSan.MaSanCon))
                 {
-                    TempData["LoiThongBao"] = "Không thể phê duyệt vì lịch đặt bị trùng với đơn khác đã được duyệt!";
-                    return RedirectToAction("QuanLyDatSan");
+                    // Đơn có chọn sân con (A1/A2/A3/A4) → chỉ kiểm tra trùng đúng sân con đó
+                    // Các sân con khác cùng giờ vẫn được duyệt bình thường
+                    isOverlapped = _dbSB.KiemTraTrungLichSanCon(
+                        datSan.MaSan.Value,
+                        datSan.MaSanCon,
+                        datSan.NgayDat,
+                        datSan.GioBatDau,
+                        datSan.GioKetThuc,
+                        datSan.MaDatSan);
+
+                    if (isOverlapped)
+                    {
+                        TempData["LoiThongBao"] = $"Không thể phê duyệt vì sân {datSan.MaSanCon} đã có lịch đặt trùng khung giờ này!";
+                        return RedirectToAction("QuanLyDatSan");
+                    }
+                }
+                else
+                {
+                    // Đơn không chọn sân con → kiểm tra toàn bộ sân (phân cấp)
+                    isOverlapped = _dbSB.KiemTraTrungLichPhanCap(
+                        datSan.MaSan.Value,
+                        datSan.NgayDat,
+                        datSan.GioBatDau,
+                        datSan.GioKetThuc,
+                        datSan.MaDatSan);
+
+                    if (isOverlapped)
+                    {
+                        TempData["LoiThongBao"] = "Không thể phê duyệt vì lịch đặt bị trùng với đơn khác đã được duyệt!";
+                        return RedirectToAction("QuanLyDatSan");
+                    }
                 }
             }
 
             datSan.TrangThai = "Đã duyệt";
             db.SubmitChanges();
 
-            TempData["ThanhCong"] = "Đã duyệt đơn đặt sân thành công!";
+            TempData["ThanhCong"] = $"Đã duyệt đơn đặt sân thành công!" +
+                (!string.IsNullOrEmpty(datSan.MaSanCon) ? $" (Sân {datSan.MaSanCon})" : "");
             return RedirectToAction("QuanLyDatSan");
         }
 
@@ -380,11 +411,26 @@ namespace DATSANBONG.Controllers
                 // Kiểm tra trùng lịch trước khi duyệt
                 if (don.MaSan.HasValue)
                 {
-                    bool isOverlapped = _dbSB.KiemTraTrungLichPhanCap(don.MaSan.Value, don.NgayDat, don.GioBatDau, don.GioKetThuc, don.MaDatSan);
-                    if (isOverlapped)
+                    bool isOverlapped;
+                    if (!string.IsNullOrEmpty(don.MaSanCon))
                     {
-                        TempData["LoiThongBao"] = "Không thể phê duyệt đơn đặt này vì bị trùng lịch phân cấp.";
-                        return RedirectToAction("QuanLyDatSan");
+                        isOverlapped = _dbSB.KiemTraTrungLichSanCon(
+                            don.MaSan.Value, don.MaSanCon,
+                            don.NgayDat, don.GioBatDau, don.GioKetThuc, don.MaDatSan);
+                        if (isOverlapped)
+                        {
+                            TempData["LoiThongBao"] = $"Không thể phê duyệt vì sân {don.MaSanCon} đã có lịch đặt trùng khung giờ này!";
+                            return RedirectToAction("QuanLyDatSan");
+                        }
+                    }
+                    else
+                    {
+                        isOverlapped = _dbSB.KiemTraTrungLichPhanCap(don.MaSan.Value, don.NgayDat, don.GioBatDau, don.GioKetThuc, don.MaDatSan);
+                        if (isOverlapped)
+                        {
+                            TempData["LoiThongBao"] = "Không thể phê duyệt đơn đặt này vì bị trùng lịch phân cấp.";
+                            return RedirectToAction("QuanLyDatSan");
+                        }
                     }
                 }
 
